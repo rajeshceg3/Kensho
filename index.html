@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kenshō</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@800&display=swap" rel="stylesheet">
+    
+    <style>
+        /*
+        =====================================================================
+        ==  KENSHŌ  |  A Study in Digital Serenity                           ==
+        =====================================================================
+        ==  DESIGN PHILOSOPHY:                                             ==
+        ==  Every element serves tranquility. Muted pastels create a soft  ==
+        ==  atmosphere. Gradients and shadows provide depth without        ==
+        ==  visual noise. Typography is architectural, giving words        ==
+        ==  presence and space. Animations are deliberate and fluid,       ==
+        ==  respecting the user's attention. The geometry is a metaphor    ==
+        ==  for clarity emerging from focus. This is design as meditation. ==
+        =====================================================================
+        */
+
+        :root {
+            /* Muted Pastel Palette - Colors are soft, low-saturation, and harmonious. */
+            --color-bg-start: #f2eef7;   /* Pale Lavender */
+            --color-bg-end: #d8e7f2;     /* Powder Blue */
+            --color-pool: #ffffff;
+            --color-shadow-light: rgba(180, 190, 220, 0.1);
+            --color-shadow-deep: rgba(180, 190, 220, 0.25);
+            --color-text-primary: #5a5a72; /* Deep Slate Blue */
+            --color-text-secondary: #8c8ca1;
+            --color-accent: #f2b7a8; /* Soft Terracotta */
+            --color-accent-dark: #e89a87;
+            
+            --font-main: 'Manrope', 'SF Pro Display', 'Helvetica Neue', 'Arial', sans-serif;
+            --transition-speed: 0.8s;
+        }
+
+        /* --- 1. Base & Background --- */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: var(--font-main);
+            color: var(--color-text-primary);
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* CSS Gradient: A soft, atmospheric background that subtly shifts. */
+            background: linear-gradient(135deg, var(--color-bg-start), var(--color-bg-end));
+            background-size: 200% 200%;
+            animation: gradient-flow 20s ease-in-out infinite;
+        }
+
+        @keyframes gradient-flow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- 2. Main Layout & Typography --- */
+
+        main {
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fade-in 1.5s ease-out 0.5s forwards;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            padding: 1rem; /* Add some padding for smaller screens */
+        }
+
+        @keyframes fade-in {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .title {
+            font-size: 3rem;
+            font-weight: 800;
+            /* Typography Trick: Wide letter spacing for an architectural, airy feel. */
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            padding-left: 0.5em; /* Compensate for last letter spacing */
+            color: var(--color-text-primary);
+            /* Responsive font size for title */
+            font-size: clamp(1.5rem, 6vw, 3rem);
+        }
+
+        /* --- 3. The Interactive Pool --- */
+        
+        #pool-container {
+            position: relative;
+            /* Removed fixed width/height for responsiveness */
+            max-width: 90vw; /* Max width relative to viewport width */
+            max-height: 90vh; /* Max height relative to viewport height */
+            aspect-ratio: 1 / 1; /* Maintain a perfect square aspect ratio */
+            /* Use min() to ensure it doesn't get too large, but also scales down */
+            width: min(400px, 90vw); 
+            height: min(400px, 90vh);
+            cursor: pointer;
+            margin: auto; /* Center the container */
+        }
+
+        .pool-shape {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--color-pool);
+            border-radius: 50%;
+            /* Shadows: Layered shadows for a soft, realistic depth. */
+            box-shadow: 
+                0 5px 15px var(--color-shadow-light),
+                0 20px 40px var(--color-shadow-deep);
+            transition: transform var(--transition-speed) cubic-bezier(0.165, 0.84, 0.44, 1), 
+                        box-shadow var(--transition-speed) cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        #pool-container:hover .pool-shape {
+            transform: scale(1.02) translateY(-5px);
+            box-shadow: 
+                0 8px 20px var(--color-shadow-light),
+                0 30px 60px var(--color-shadow-deep);
+        }
+
+        /* --- 4. Ripples & Patterns --- */
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid var(--color-accent);
+            background: transparent;
+            animation: ripple-effect 1.5s ease-out forwards;
+            pointer-events: none; /* Important for multiple clicks */
+        }
+        
+        @keyframes ripple-effect {
+            from {
+                transform: scale(0);
+                opacity: 0.8;
+            }
+            to {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+
+        #pattern-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            /* The geometric pattern is drawn here with SVG */
+        }
+        
+        #pattern-container svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg); /* Start from the top */
+        }
+
+        #pattern-container path {
+            fill: none;
+            stroke: var(--color-accent);
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            /* Animation: The key to the drawing effect. */
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        /* --- 5. Controls & UI States --- */
+
+        .controls {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .control-button {
+            font-family: var(--font-main);
+            font-size: 1.2rem;
+            font-weight: 800;
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease, opacity var(--transition-speed) ease-out;
+            opacity: 1;
+            transform: translateY(0);
+            /* Responsive padding and font size for buttons */
+            padding: clamp(0.8rem, 3vw, 1rem) clamp(1.5rem, 6vw, 2rem);
+            font-size: clamp(1rem, 4vw, 1.2rem);
+        }
+
+        .control-button:hover {
+            background-color: var(--color-accent-dark);
+            transform: translateY(-3px);
+        }
+        
+        #timer-display {
+            font-size: 4rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            color: var(--color-text-secondary);
+            opacity: 0;
+            position: absolute; /* Allows for smooth cross-fade */
+            transition: opacity var(--transition-speed) ease-out;
+            pointer-events: none;
+            /* Responsive font size for timer */
+            font-size: clamp(2.5rem, 10vw, 4rem);
+        }
+        
+        .timer-active #start-button {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(10px);
+        }
+
+        .timer-active #timer-display {
+            opacity: 1;
+        }
+        
+        #reset-button {
+            opacity: 0;
+            pointer-events: none;
+            position: absolute; /* Sits under the timer display */
+            transform: translateY(10px);
+        }
+        
+        .timer-complete #timer-display {
+             opacity: 0;
+        }
+        
+        .timer-complete #reset-button {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateY(0);
+        }
+        
+    </style>
+</head>
+<body>
+
+    <main>
+        <h1 class="title">Kenshō</h1>
+        
+        <div id="pool-container">
+            <div class="pool-shape"></div>
+            
+            <div id="pattern-container">
+                <!-- SVG for the geometric pattern will be injected here by JS -->
+            </div>
+            
+            <div class="controls">
+                <div id="timer-display">5:00</div>
+                <button class="control-button" id="start-button">START FOCUS</button>
+                <button class="control-button" id="reset-button">RESET</button>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const poolContainer = document.getElementById('pool-container');
+        const patternContainer = document.getElementById('pattern-container');
+        const startButton = document.getElementById('start-button');
+        const resetButton = document.getElementById('reset-button');
+        const timerDisplay = document.getElementById('timer-display');
+
+        const DURATION_MINUTES = 5;
+        let totalSeconds = DURATION_MINUTES * 60;
+        let remainingSeconds = totalSeconds;
+        let timerInterval = null;
+
+        // --- 1. Ripple Effect Interaction ---
+        // Handles click/tap events on the pool to create visual ripples.
+        poolContainer.addEventListener('click', (e) => {
+            // Prevent ripples while timer is active to maintain focus
+            if (poolContainer.classList.contains('timer-active')) return;
+
+            // Get the position of the click relative to the pool container
+            const rect = poolContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Create a new ripple element
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            ripple.style.left = `${x}px`;
+            ripple.style.top = `${y}px`;
+            
+            // Randomize ripple size for a more natural look
+            const rippleSize = Math.random() * 100 + 50; // Size between 50px and 150px
+            ripple.style.width = `${rippleSize}px`;
+            ripple.style.height = `${rippleSize}px`;
+
+            // Adjust position to center the ripple on the click point
+            ripple.style.marginLeft = `-${rippleSize / 2}px`;
+            ripple.style.marginTop = `-${rippleSize / 2}px`;
+            
+            // Add the ripple to the pool container
+            poolContainer.appendChild(ripple);
+
+            // Remove the ripple element after its animation completes
+            setTimeout(() => {
+                ripple.remove();
+            }, 1500); // Matches the ripple-effect animation duration
+        });
+        
+        // --- 2. Timer and Pattern Logic ---
+        
+        // Event listener for the Start Focus button
+        startButton.addEventListener('click', () => {
+            poolContainer.classList.add('timer-active'); // Activate timer UI state
+            startTimer();
+        });
+
+        // Event listener for the Reset button
+        resetButton.addEventListener('click', () => {
+            // Remove timer states
+            poolContainer.classList.remove('timer-active', 'timer-complete');
+            clearInterval(timerInterval); // Stop any active timer
+            remainingSeconds = totalSeconds; // Reset time
+            updateTimerDisplay(); // Update display to initial time
+            patternContainer.innerHTML = ''; // Clear the SVG pattern
+        });
+        
+        // Function to start the focus timer
+        function startTimer() {
+            // Generate the SVG pattern corresponding to the total focus duration
+            generatePattern(totalSeconds);
+
+            // Set up an interval to update the timer every second
+            timerInterval = setInterval(() => {
+                remainingSeconds--; // Decrement time
+                updateTimerDisplay(); // Update the displayed time
+                updatePattern(); // Update the drawing progress of the SVG pattern
+
+                // If timer reaches zero or less, stop it and transition to complete state
+                if (remainingSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    poolContainer.classList.remove('timer-active');
+                    poolContainer.classList.add('timer-complete');
+                }
+            }, 1000); // 1000 milliseconds = 1 second
+        }
+
+        // Function to format and update the timer display
+        function updateTimerDisplay() {
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            // Pad seconds with a leading zero if less than 10
+            timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // --- 3. Generative SVG Pattern ---
+        // This is the core of the visual reward system, drawing a geometric pattern.
+        function generatePattern(steps) {
+            // The size corresponds to the viewBox of the SVG, allowing it to scale
+            const size = 400; 
+            const center = size / 2;
+            const numLines = 36; // Number of lines in the pattern, chosen for divisibility
+            const angleStep = 360 / numLines; // Angle between each starting point
+
+            let svgHTML = `<svg viewBox="0 0 ${size} ${size}">`;
+
+            for (let i = 0; i < numLines; i++) {
+                // Calculate the angle for the current line's start point
+                const angle = i * angleStep * (Math.PI / 180); // Convert degrees to radians
+                const maxRadius = center - 20; // Max radius for lines, with padding from edge
+                
+                // Determine the connection point for the current line.
+                // The '7' is a prime number, creating a complex and visually appealing starburst pattern.
+                const connectTo = (i * 7) % numLines; 
+                const angle2 = connectTo * angleStep * (Math.PI / 180);
+
+                // Calculate start (x1, y1) and end (x2, y2) coordinates for the line
+                const x1 = center + maxRadius * Math.cos(angle);
+                const y1 = center + maxRadius * Math.sin(angle);
+                const x2 = center + maxRadius * Math.cos(angle2);
+                const y2 = center + maxRadius * Math.sin(angle2);
+                
+                // Create an SVG path element
+                const pathData = `M ${x1},${y1} L ${x2},${y2}`; // Move to (x1,y1), Line to (x2,y2)
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute('d', pathData);
+                
+                // Calculate the length of the path for the drawing animation (stroke-dasharray/offset)
+                const length = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
+                path.style.strokeDasharray = length;
+                path.style.strokeDashoffset = length; // Start with the path fully hidden
+                
+                // Append the path's outer HTML to the SVG string
+                svgHTML += path.outerHTML;
+            }
+
+            svgHTML += `</svg>`;
+            patternContainer.innerHTML = svgHTML; // Inject the generated SVG into the container
+        }
+        
+        // Function to update the drawing progress of the SVG pattern
+        function updatePattern() {
+            const paths = patternContainer.querySelectorAll('path');
+            if (paths.length === 0) return; // Exit if no paths are found
+
+            // Calculate the current progress of the timer (0 to 1)
+            const progress = (totalSeconds - remainingSeconds) / totalSeconds;
+            
+            // Iterate over each path and update its stroke-dashoffset to reveal it
+            paths.forEach(path => {
+                const length = parseFloat(path.style.strokeDasharray);
+                // The offset decreases as progress increases, revealing the line
+                path.style.strokeDashoffset = length * (1 - progress);
+            });
+        }
+        
+        // Initialize the timer display when the page loads
+        updateTimerDisplay();
+    });
+    </script>
+</body>
+</html>
+
