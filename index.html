@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="themes.css">
     
     <style>
         /*
@@ -270,6 +271,32 @@
 </head>
 <body>
 
+    <div class="settings-panel">
+        <div class="settings-toggle" id="settings-button">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.829 15.228a3.002 3.002 0 0 1-4.242 0l-1.06-1.061a3 3 0 0 1 0-4.242l1.06-1.061a3.002 3.002 0 0 1 4.242 0l2.122 2.121a3.002 3.002 0 0 1 0 4.242l-2.122 2.121Zm-3.181-3.182a1 1 0 0 0-1.414 0l-1.061 1.06a1 1 0 0 0 0 1.414l1.06 1.061a1 1 0 0 0 1.414 0l2.121-2.121a1 1 0 0 0 0-1.414l-2.121-2.121ZM12 21a3 3 0 0 1-3-3H5a3 3 0 0 1-3-3v-4a3 3 0 0 1 3-3h4a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3h-4a3 3 0 0 1-3 3Zm-6-5h10a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1H6a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1Z"/></svg>
+        </div>
+        <div class="settings-menu" id="settings-menu">
+            <div class="setting">
+                <h4>Focus Time</h4>
+                <div class="time-options" id="time-options">
+                    <div class="time-option" data-time="5">5m</div>
+                    <div class="time-option selected" data-time="15">15m</div>
+                    <div class="time-option" data-time="25">25m</div>
+                    <div class="time-option" data-time="45">45m</div>
+                </div>
+            </div>
+            <div class="setting">
+                <h4>Theme</h4>
+                <div class="theme-options" id="theme-options">
+                    <div class="theme-dot" data-theme="default" style="background: linear-gradient(135deg, #f2eef7, #d8e7f2);"></div>
+                    <div class="theme-dot" data-theme="theme-sunrise" style="background: linear-gradient(135deg, #fde5c8, #f9cbb4);"></div>
+                    <div class="theme-dot" data-theme="theme-forest" style="background: linear-gradient(135deg, #e0f2e9, #cde4d4);"></div>
+                    <div class="theme-dot" data-theme="theme-twilight" style="background: linear-gradient(135deg, #c3d4e0, #3b4d61);"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <main>
         <h1 class="title">Kenshō</h1>
         
@@ -296,13 +323,29 @@
         const startButton = document.getElementById('start-button');
         const resetButton = document.getElementById('reset-button');
         const timerDisplay = document.getElementById('timer-display');
+        const settingsButton = document.getElementById('settings-button');
+        const settingsMenu = document.getElementById('settings-menu');
+        const timeOptions = document.getElementById('time-options');
+        const themeOptions = document.getElementById('theme-options');
 
-        const DURATION_MINUTES = 5;
-        let totalSeconds = DURATION_MINUTES * 60;
+        let durationMinutes = 15; // Default duration
+        let totalSeconds = durationMinutes * 60;
         let remainingSeconds = totalSeconds;
         let timerInterval = null;
 
-        // --- 1. Ripple Effect Interaction ---
+        // --- 1. Settings Panel Logic ---
+        settingsButton.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent click from bubbling up to document
+            settingsMenu.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!settingsMenu.contains(e.target) && settingsMenu.classList.contains('active')) {
+                settingsMenu.classList.remove('active');
+            }
+        });
+
+        // --- 2. Ripple Effect Interaction ---
         // Handles click/tap events on the pool to create visual ripples.
         poolContainer.addEventListener('click', (e) => {
             // Prevent ripples while timer is active to maintain focus
@@ -337,7 +380,37 @@
             }, 1500); // Matches the ripple-effect animation duration
         });
         
-        // --- 2. Timer and Pattern Logic ---
+        // --- 3. Timer and Pattern Logic ---
+
+        timeOptions.addEventListener('click', (e) => {
+            if (e.target.classList.contains('time-option')) {
+                // Update duration
+                durationMinutes = parseInt(e.target.dataset.time);
+                totalSeconds = durationMinutes * 60;
+                remainingSeconds = totalSeconds;
+
+                // Update UI
+                timeOptions.querySelector('.selected').classList.remove('selected');
+                e.target.classList.add('selected');
+                updateTimerDisplay();
+                settingsMenu.classList.remove('active'); // Close menu
+            }
+        });
+
+        themeOptions.addEventListener('click', (e) => {
+            if (e.target.classList.contains('theme-dot')) {
+                const theme = e.target.dataset.theme;
+
+                // Update UI
+                themeOptions.querySelector('.selected')?.classList.remove('selected');
+                e.target.classList.add('selected');
+
+                // Update body class
+                document.body.className = theme === 'default' ? '' : theme;
+
+                settingsMenu.classList.remove('active'); // Close menu
+            }
+        });
         
         // Event listener for the Start Focus button
         startButton.addEventListener('click', () => {
@@ -383,7 +456,7 @@
             timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
         }
         
-        // --- 3. Generative SVG Pattern ---
+        // --- 4. Generative SVG Pattern ---
         // This is the core of the visual reward system, drawing a geometric pattern.
         function generatePattern(steps) {
             // The size corresponds to the viewBox of the SVG, allowing it to scale
@@ -446,6 +519,26 @@
         
         // Initialize the timer display when the page loads
         updateTimerDisplay();
+
+        // --- 4. Initialization ---
+        function initialize() {
+            // Set initial time
+            const initialTime = timeOptions.querySelector('.selected');
+            if (initialTime) {
+                durationMinutes = parseInt(initialTime.dataset.time);
+                totalSeconds = durationMinutes * 60;
+                remainingSeconds = totalSeconds;
+                updateTimerDisplay();
+            }
+
+            // Set initial theme
+            const initialThemeDot = themeOptions.querySelector('[data-theme="default"]');
+            if(initialThemeDot) {
+                initialThemeDot.classList.add('selected');
+            }
+        }
+
+        initialize();
     });
     </script>
 </body>
