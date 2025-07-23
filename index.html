@@ -294,8 +294,21 @@
                     <div class="theme-dot" data-theme="theme-twilight" style="background: linear-gradient(135deg, #c3d4e0, #3b4d61);"></div>
                 </div>
             </div>
+            <div class="setting">
+                <h4>Sound</h4>
+                <div class="sound-options" id="sound-options">
+                    <div class="sound-option" data-sound="none">None</div>
+                    <div class="sound-option" data-sound="rain">Rain</div>
+                    <div class="sound-option" data-sound="forest">Forest</div>
+                    <div class="sound-option" data-sound="waves">Waves</div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <audio id="audio-rain" loop src="sounds/rain.mp3"></audio>
+    <audio id="audio-forest" loop src="sounds/forest.mp3"></audio>
+    <audio id="audio-waves" loop src="sounds/waves.mp3"></audio>
 
     <main>
         <h1 class="title">Kenshō</h1>
@@ -327,7 +340,15 @@
         const settingsMenu = document.getElementById('settings-menu');
         const timeOptions = document.getElementById('time-options');
         const themeOptions = document.getElementById('theme-options');
+        const soundOptions = document.getElementById('sound-options');
 
+        const audio = {
+            rain: document.getElementById('audio-rain'),
+            forest: document.getElementById('audio-forest'),
+            waves: document.getElementById('audio-waves'),
+        };
+
+        let currentSound = 'none';
         let durationMinutes = 15; // Default duration
         let totalSeconds = durationMinutes * 60;
         let remainingSeconds = totalSeconds;
@@ -411,21 +432,55 @@
                 settingsMenu.classList.remove('active'); // Close menu
             }
         });
+
+        soundOptions.addEventListener('click', (e) => {
+            if (e.target.classList.contains('sound-option')) {
+                // Stop any currently playing audio
+                Object.values(audio).forEach(sound => {
+                    if (!sound.paused) {
+                        fadeAudio(sound, sound.volume, 0, 200);
+                    }
+                });
+
+                currentSound = e.target.dataset.sound;
+                soundOptions.querySelector('.selected').classList.remove('selected');
+                e.target.classList.add('selected');
+
+                // Play a sample of the new sound
+                if (currentSound !== 'none') {
+                    const sound = audio[currentSound];
+                    sound.currentTime = 0;
+                    fadeAudio(sound, 0, 0.5, 500, () => {
+                        setTimeout(() => {
+                            if (!sound.paused) {
+                                fadeAudio(sound, sound.volume, 0, 500);
+                            }
+                        }, 1000);
+                    });
+                }
+            }
+        });
         
         // Event listener for the Start Focus button
         startButton.addEventListener('click', () => {
+            if (timerInterval) return; // Prevent multiple timers
             poolContainer.classList.add('timer-active'); // Activate timer UI state
+            settingsButton.classList.add('disabled');
             startTimer();
+            fadeInAudio();
         });
 
         // Event listener for the Reset button
         resetButton.addEventListener('click', () => {
             // Remove timer states
             poolContainer.classList.remove('timer-active', 'timer-complete');
+            settingsButton.classList.remove('disabled');
             clearInterval(timerInterval); // Stop any active timer
+            timerInterval = null;
             remainingSeconds = totalSeconds; // Reset time
             updateTimerDisplay(); // Update display to initial time
             patternContainer.innerHTML = ''; // Clear the SVG pattern
+            fadeOutAudio();
         });
         
         // Function to start the focus timer
@@ -442,8 +497,11 @@
                 // If timer reaches zero or less, stop it and transition to complete state
                 if (remainingSeconds <= 0) {
                     clearInterval(timerInterval);
+                    timerInterval = null;
                     poolContainer.classList.remove('timer-active');
                     poolContainer.classList.add('timer-complete');
+                    settingsButton.classList.remove('disabled');
+                    fadeOutAudio();
                 }
             }, 1000); // 1000 milliseconds = 1 second
         }
@@ -520,7 +578,51 @@
         // Initialize the timer display when the page loads
         updateTimerDisplay();
 
-        // --- 4. Initialization ---
+        // --- 5. Audio Controls ---
+        function fadeAudio(sound, from, to, duration, onComplete) {
+            sound.volume = from;
+            if (from < to) {
+                sound.play();
+            }
+
+            let interval = 50; // ms
+            let steps = duration / interval;
+            let step_u = (to - from) / steps;
+
+            let volInterval = setInterval(() => {
+                let newVol = sound.volume + step_u;
+                if ((step_u > 0 && newVol >= to) || (step_u < 0 && newVol <= to)) {
+                    sound.volume = to;
+                    if (to === 0) {
+                        sound.pause();
+                        sound.currentTime = 0;
+                    }
+                    if (onComplete) onComplete();
+                    clearInterval(volInterval);
+                } else {
+                    sound.volume = newVol;
+                }
+            }, interval);
+            return volInterval;
+        }
+
+        function fadeInAudio() {
+            if (currentSound !== 'none') {
+                const sound = audio[currentSound];
+                sound.currentTime = 0;
+                fadeAudio(sound, 0, 1, 1000);
+            }
+        }
+
+        function fadeOutAudio() {
+            Object.values(audio).forEach(sound => {
+                if (!sound.paused) {
+                    fadeAudio(sound, sound.volume, 0, 1000);
+                }
+            });
+        }
+
+        // --- 6. Initialization ---
         function initialize() {
             // Set initial time
             const initialTime = timeOptions.querySelector('.selected');
@@ -535,6 +637,12 @@
             const initialThemeDot = themeOptions.querySelector('[data-theme="default"]');
             if(initialThemeDot) {
                 initialThemeDot.classList.add('selected');
+            }
+
+            // Set initial sound
+            const initialSound = soundOptions.querySelector('[data-sound="none"]');
+            if (initialSound) {
+                initialSound.classList.add('selected');
             }
         }
 
