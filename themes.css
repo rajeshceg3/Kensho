@@ -30,6 +30,12 @@
     transform: scale(1.1) rotate(20deg);
 }
 
+.settings-toggle.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    transform: none;
+}
+
 .settings-toggle svg {
     width: 24px;
     height: 24px;
@@ -74,12 +80,13 @@
     font-size: 0.8rem;
 }
 
-.time-options, .theme-options {
+.time-options, .theme-options, .sound-options {
     display: flex;
     gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
-.time-option, .theme-dot {
+.time-option, .theme-dot, .sound-option {
     padding: 0.5rem 1rem;
     border-radius: 20px;
     background: var(--color-bg-start);
@@ -90,11 +97,11 @@
     border: 2px solid transparent;
 }
 
-.time-option:hover {
+.time-option:hover, .sound-option:hover {
     background: var(--color-bg-end);
 }
 
-.time-option.selected {
+.time-option.selected, .sound-option.selected {
     background: var(--color-accent);
     color: white;
     border-color: var(--color-accent-dark);
@@ -162,10 +169,10 @@ body.theme-twilight .time-option {
     background: var(--color-bg-end);
     color: var(--color-text-primary);
 }
-body.theme-twilight .time-option:hover {
+body.theme-twilight .time-option:hover, body.theme-twilight .sound-option:hover {
     background: #4a5f78;
 }
-body.theme-twilight .time-option.selected {
+body.theme-twilight .time-option.selected, body.theme-twilight .sound-option.selected {
     background: var(--color-accent);
     color: #303d4e;
     border-color: var(--color-accent-dark);
