@@ -1,0 +1,256 @@
+/*
+=====================================================================
+==  KENSHŌ  |  A Study in Digital Serenity                           ==
+=====================================================================
+==  DESIGN PHILOSOPHY:                                             ==
+==  Every element serves tranquility. Muted pastels create a soft  ==
+==  atmosphere. Gradients and shadows provide depth without        ==
+==  visual noise. Typography is architectural, giving words        ==
+==  presence and space. Animations are deliberate and fluid,       ==
+==  respecting the user's attention. The geometry is a metaphor    ==
+==  for clarity emerging from focus. This is design as meditation. ==
+=====================================================================
+*/
+
+:root {
+    /* Muted Pastel Palette - Colors are soft, low-saturation, and harmonious. */
+    --color-bg-start: #f2eef7;   /* Pale Lavender */
+    --color-bg-end: #d8e7f2;     /* Powder Blue */
+    --color-pool: #ffffff;
+    --color-shadow-light: rgba(180, 190, 220, 0.1);
+    --color-shadow-deep: rgba(180, 190, 220, 0.25);
+    --color-text-primary: #5a5a72; /* Deep Slate Blue */
+    --color-text-secondary: #8c8ca1;
+    --color-accent: #f2b7a8; /* Soft Terracotta */
+    --color-accent-dark: #e89a87;
+
+    --font-main: 'Manrope', 'SF Pro Display', 'Helvetica Neue', 'Arial', sans-serif;
+    --transition-speed: 0.8s;
+}
+
+/* --- 1. Base & Background --- */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: var(--font-main);
+    color: var(--color-text-primary);
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* CSS Gradient: A soft, atmospheric background that subtly shifts. */
+    background: linear-gradient(135deg, var(--color-bg-start), var(--color-bg-end));
+    background-size: 200% 200%;
+    animation: gradient-flow 20s ease-in-out infinite;
+}
+
+@keyframes gradient-flow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* --- 2. Main Layout & Typography --- */
+
+main {
+    text-align: center;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fade-in 1.5s ease-out 0.5s forwards;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    padding: 1rem; /* Add some padding for smaller screens */
+}
+
+@keyframes fade-in {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.title {
+    font-size: 3rem;
+    font-weight: 800;
+    /* Typography Trick: Wide letter spacing for an architectural, airy feel. */
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    padding-left: 0.5em; /* Compensate for last letter spacing */
+    color: var(--color-text-primary);
+    /* Responsive font size for title */
+    font-size: clamp(1.5rem, 6vw, 3rem);
+}
+
+/* --- 3. The Interactive Pool --- */
+
+#pool-container {
+    position: relative;
+    /* Removed fixed width/height for responsiveness */
+    max-width: 90vw; /* Max width relative to viewport width */
+    max-height: 90vh; /* Max height relative to viewport height */
+    aspect-ratio: 1 / 1; /* Maintain a perfect square aspect ratio */
+    /* Use min() to ensure it doesn't get too large, but also scales down */
+    width: min(400px, 90vw);
+    height: min(400px, 90vh);
+    cursor: pointer;
+    margin: auto; /* Center the container */
+}
+
+.pool-shape {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--color-pool);
+    border-radius: 50%;
+    /* Shadows: Layered shadows for a soft, realistic depth. */
+    box-shadow:
+        0 5px 15px var(--color-shadow-light),
+        0 20px 40px var(--color-shadow-deep);
+    transition: transform var(--transition-speed) cubic-bezier(0.165, 0.84, 0.44, 1),
+                box-shadow var(--transition-speed) cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+#pool-container:hover .pool-shape {
+    transform: scale(1.02) translateY(-5px);
+    box-shadow:
+        0 8px 20px var(--color-shadow-light),
+        0 30px 60px var(--color-shadow-deep);
+}
+
+/* --- 4. Ripples & Patterns --- */
+
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid var(--color-accent);
+    background: transparent;
+    animation: ripple-effect 1.5s ease-out forwards;
+    pointer-events: none; /* Important for multiple clicks */
+}
+
+@keyframes ripple-effect {
+    from {
+        transform: scale(0);
+        opacity: 0.8;
+    }
+    to {
+        transform: scale(3);
+        opacity: 0;
+    }
+}
+
+#pattern-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    /* The geometric pattern is drawn here with SVG */
+}
+
+#pattern-container svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg); /* Start from the top */
+}
+
+#pattern-container path {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    /* Animation: The key to the drawing effect. */
+    transition: stroke-dashoffset 1s linear;
+}
+
+/* --- 5. Controls & UI States --- */
+
+.controls {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.control-button {
+    font-family: var(--font-main);
+    font-size: 1.2rem;
+    font-weight: 800;
+    background: var(--color-accent);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease, opacity var(--transition-speed) ease-out;
+    opacity: 1;
+    transform: translateY(0);
+    /* Responsive padding and font size for buttons */
+    padding: clamp(0.8rem, 3vw, 1rem) clamp(1.5rem, 6vw, 2rem);
+    font-size: clamp(1rem, 4vw, 1.2rem);
+}
+
+.control-button:hover {
+    background-color: var(--color-accent-dark);
+    transform: translateY(-3px);
+}
+
+#timer-display {
+    font-size: 4rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: var(--color-text-secondary);
+    opacity: 0;
+    position: absolute; /* Allows for smooth cross-fade */
+    transition: opacity var(--transition-speed) ease-out;
+    pointer-events: none;
+    /* Responsive font size for timer */
+    font-size: clamp(2.5rem, 10vw, 4rem);
+}
+
+.timer-active #start-button {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
+}
+
+.timer-active #timer-display {
+    opacity: 1;
+}
+
+#reset-button {
+    opacity: 0;
+    pointer-events: none;
+    position: absolute; /* Sits under the timer display */
+    transform: translateY(10px);
+}
+
+.timer-complete #timer-display {
+     opacity: 0;
+}
+
+.timer-complete #reset-button {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateY(0);
+}

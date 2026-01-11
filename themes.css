@@ -24,6 +24,8 @@
     cursor: pointer;
     box-shadow: 0 2px 10px var(--color-shadow-light);
     transition: transform 0.3s ease;
+    border: none;
+    padding: 0;
 }
 
 .settings-toggle:hover {
@@ -95,6 +97,8 @@
     transition: background 0.3s ease, color 0.3s ease;
     font-weight: 800;
     border: 2px solid transparent;
+    font-family: inherit;
+    font-size: 1rem;
 }
 
 .time-option:hover, .sound-option:hover {
