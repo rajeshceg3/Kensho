@@ -131,7 +131,7 @@ body.theme-sunrise {
     --color-bg-start: #fde5c8; /* Light Peach */
     --color-bg-end: #f9cbb4;   /* Soft Apricot */
     --color-text-primary: #6b4e3d;
-    --color-text-secondary: #9e7b68;
+    --color-text-secondary: #8a6b5a; /* Darkened for WCAG AA */
     --color-accent: #f4a261;   /* Sandy Brown */
     --color-accent-dark: #e76f51;
 }
@@ -141,7 +141,7 @@ body.theme-forest {
     --color-bg-start: #e0f2e9; /* Mint Cream */
     --color-bg-end: #cde4d4;   /* Pale Sage */
     --color-text-primary: #3a5a40;
-    --color-text-secondary: #6b8a76;
+    --color-text-secondary: #5a7363; /* Darkened for WCAG AA */
     --color-accent: #a3b18a;   /* Olive Green */
     --color-accent-dark: #588157;
 }

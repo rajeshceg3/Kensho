@@ -20,7 +20,7 @@
     --color-shadow-light: rgba(180, 190, 220, 0.1);
     --color-shadow-deep: rgba(180, 190, 220, 0.25);
     --color-text-primary: #5a5a72; /* Deep Slate Blue */
-    --color-text-secondary: #8c8ca1;
+    --color-text-secondary: #707085; /* Darkened for WCAG AA compliance */
     --color-accent: #f2b7a8; /* Soft Terracotta */
     --color-accent-dark: #e89a87;
 
@@ -253,4 +253,22 @@ main {
     opacity: 1;
     pointer-events: all;
     transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .ripple {
+        display: none;
+    }
+
+    body {
+        animation: none;
+        background-size: 100% 100%;
+    }
 }

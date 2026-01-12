@@ -22,22 +22,81 @@ document.addEventListener('DOMContentLoaded', () => {
     let totalSeconds = durationMinutes * 60;
     let remainingSeconds = totalSeconds;
     let timerInterval = null;
+    let sampleTimeout = null; // Track audio preview timeout to prevent race conditions
 
     // --- 1. Settings Panel Logic ---
+    function handleMenuKeydown(e) {
+        const focusableElements = settingsMenu.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.key === 'Tab') {
+            if (e.shiftKey) { /* shift + tab */
+                if (document.activeElement === firstElement) {
+                    e.preventDefault();
+                    lastElement.focus();
+                }
+            } else { /* tab */
+                if (document.activeElement === lastElement) {
+                    e.preventDefault();
+                    firstElement.focus();
+                }
+            }
+        } else if (e.key === 'Escape') {
+            closeSettings();
+        }
+    }
+
+    function closeSettings(restoreFocus = true) {
+        settingsMenu.classList.remove('active');
+        settingsButton.setAttribute('aria-expanded', 'false');
+        settingsMenu.removeEventListener('keydown', handleMenuKeydown);
+        if (restoreFocus) {
+            settingsButton.focus(); // Restore focus
+        }
+    }
+
+    function openSettings() {
+        settingsMenu.classList.add('active');
+        settingsButton.setAttribute('aria-expanded', 'true');
+
+        // Trap focus
+        const focusableElements = settingsMenu.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const firstElement = focusableElements[0];
+
+        if (firstElement) {
+            firstElement.focus();
+        }
+
+        settingsMenu.addEventListener('keydown', handleMenuKeydown);
+    }
+
     settingsButton.addEventListener('click', (e) => {
         e.stopPropagation(); // Prevent click from bubbling up to document
-        settingsMenu.classList.toggle('active');
+        if (settingsMenu.classList.contains('active')) {
+            closeSettings();
+        } else {
+            openSettings();
+        }
     });
 
     document.addEventListener('click', (e) => {
-        if (!settingsMenu.contains(e.target) && settingsMenu.classList.contains('active')) {
-            settingsMenu.classList.remove('active');
+        if (!settingsMenu.contains(e.target) && settingsMenu.classList.contains('active') && e.target !== settingsButton) {
+            closeSettings(false); // Don't force focus back to button on outside click
         }
     });
 
     // --- 2. Ripple Effect Interaction ---
     // Handles click/tap events on the pool to create visual ripples.
+    let lastRippleTime = 0;
+    const RIPPLE_THROTTLE = 100; // ms
+
     function createRipple(x, y) {
+        // Throttle ripple creation to prevent DOM flooding
+        const now = Date.now();
+        if (now - lastRippleTime < RIPPLE_THROTTLE) return;
+        lastRippleTime = now;
+
         // Create a new ripple element
         const ripple = document.createElement('div');
         ripple.className = 'ripple';
@@ -100,7 +159,9 @@ document.addEventListener('DOMContentLoaded', () => {
             timeOptions.querySelector('.selected').classList.remove('selected');
             e.target.classList.add('selected');
             updateTimerDisplay();
-            settingsMenu.classList.remove('active'); // Close menu
+            // Optional: Close menu on selection? User might want to change other things. Keeping it open or consistent with existing UX?
+            // Existing code closed it. Let's keep it consistent but use closeSettings() for focus management.
+            closeSettings();
         }
     });
 
@@ -115,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Update body class
             document.body.className = theme === 'default' ? '' : theme;
 
-            settingsMenu.classList.remove('active'); // Close menu
+            closeSettings();
         }
     });
 
@@ -136,11 +197,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentSound !== 'none') {
                 const sound = audio[currentSound];
                 sound.currentTime = 0;
+
+                // Clear any pending sample fade-out from previous clicks
+                if (sampleTimeout) {
+                    clearTimeout(sampleTimeout);
+                    sampleTimeout = null;
+                }
+
                 fadeAudio(sound, 0, 0.5, 500, () => {
-                    setTimeout(() => {
+                    sampleTimeout = setTimeout(() => {
                         if (!sound.paused) {
                             fadeAudio(sound, sound.volume, 0, 500);
                         }
+                        sampleTimeout = null;
                     }, 1000);
                 });
             }
@@ -229,7 +298,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const numLines = 36; // Number of lines in the pattern, chosen for divisibility
         const angleStep = 360 / numLines; // Angle between each starting point
 
-        let svgHTML = `<svg viewBox="0 0 ${size} ${size}">`;
+        // Clear previous content safely
+        while (patternContainer.firstChild) {
+            patternContainer.removeChild(patternContainer.firstChild);
+        }
+
+        const svgNS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(svgNS, "svg");
+        svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
 
         for (let i = 0; i < numLines; i++) {
             // Calculate the angle for the current line's start point
@@ -249,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Create an SVG path element
             const pathData = `M ${x1},${y1} L ${x2},${y2}`; // Move to (x1,y1), Line to (x2,y2)
-            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            const path = document.createElementNS(svgNS, "path");
             path.setAttribute('d', pathData);
 
             // Calculate the length of the path for the drawing animation (stroke-dasharray/offset)
@@ -257,12 +333,10 @@ document.addEventListener('DOMContentLoaded', () => {
             path.style.strokeDasharray = length;
             path.style.strokeDashoffset = length; // Start with the path fully hidden
 
-            // Append the path's outer HTML to the SVG string
-            svgHTML += path.outerHTML;
+            svg.appendChild(path);
         }
 
-        svgHTML += `</svg>`;
-        patternContainer.innerHTML = svgHTML; // Inject the generated SVG into the container
+        patternContainer.appendChild(svg);
     }
 
     // Function to update the drawing progress of the SVG pattern
@@ -337,6 +411,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function fadeInAudio() {
         if (currentSound !== 'none') {
             const sound = audio[currentSound];
+
+            // Cancel any pending sample fade-out so the audio stays playing
+            if (sampleTimeout) {
+                clearTimeout(sampleTimeout);
+                sampleTimeout = null;
+            }
+
             sound.currentTime = 0;
             fadeAudio(sound, 0, 1, 1000);
         }
