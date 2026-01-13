@@ -131,7 +131,7 @@ body.theme-sunrise {
     --color-bg-start: #fde5c8; /* Light Peach */
     --color-bg-end: #f9cbb4;   /* Soft Apricot */
     --color-text-primary: #6b4e3d;
-    --color-text-secondary: #9e7b68;
+    --color-text-secondary: #8a5e4b; /* Darkened for AA compliance */
     --color-accent: #f4a261;   /* Sandy Brown */
     --color-accent-dark: #e76f51;
 }
@@ -141,14 +141,14 @@ body.theme-forest {
     --color-bg-start: #e0f2e9; /* Mint Cream */
     --color-bg-end: #cde4d4;   /* Pale Sage */
     --color-text-primary: #3a5a40;
-    --color-text-secondary: #6b8a76;
+    --color-text-secondary: #557060; /* Darkened for AA compliance */
     --color-accent: #a3b18a;   /* Olive Green */
     --color-accent-dark: #588157;
 }
 
 /* Theme: Twilight */
 body.theme-twilight {
-    --color-bg-start: #c3d4e0; /* Powder Blue */
+    --color-bg-start: #5c6f7f; /* Darkened for White Text Contrast */
     --color-bg-end: #3b4d61;   /* Deep Slate */
     --color-text-primary: #ffffff;
     --color-text-secondary: #c3d4e0;
