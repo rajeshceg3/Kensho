@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let totalSeconds = durationMinutes * 60;
     let remainingSeconds = totalSeconds;
     let timerInterval = null;
+    let timerCheckInterval = null;
 
     // --- 1. Settings Panel Logic ---
     settingsButton.addEventListener('click', (e) => {
@@ -37,7 +38,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 2. Ripple Effect Interaction ---
     // Handles click/tap events on the pool to create visual ripples.
+
+    let lastRippleTime = 0;
+    const RIPPLE_THROTTLE_MS = 100;
+
     function createRipple(x, y) {
+        const now = Date.now();
+        if (now - lastRippleTime < RIPPLE_THROTTLE_MS) return;
+        lastRippleTime = now;
+
         // Create a new ripple element
         const ripple = document.createElement('div');
         ripple.className = 'ripple';
@@ -90,27 +99,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 3. Timer and Pattern Logic ---
 
     timeOptions.addEventListener('click', (e) => {
-        if (e.target.classList.contains('time-option')) {
+        const target = e.target.closest('.time-option');
+        if (target) {
             // Update duration
-            durationMinutes = parseInt(e.target.dataset.time);
+            durationMinutes = parseInt(target.dataset.time);
             totalSeconds = durationMinutes * 60;
             remainingSeconds = totalSeconds;
 
             // Update UI
-            timeOptions.querySelector('.selected').classList.remove('selected');
-            e.target.classList.add('selected');
+            timeOptions.querySelector('.selected')?.classList.remove('selected');
+            target.classList.add('selected');
             updateTimerDisplay();
             settingsMenu.classList.remove('active'); // Close menu
         }
     });
 
     themeOptions.addEventListener('click', (e) => {
-        if (e.target.classList.contains('theme-dot')) {
-            const theme = e.target.dataset.theme;
+        const target = e.target.closest('.theme-dot');
+        if (target) {
+            const theme = target.dataset.theme;
 
             // Update UI
             themeOptions.querySelector('.selected')?.classList.remove('selected');
-            e.target.classList.add('selected');
+            target.classList.add('selected');
 
             // Update body class
             document.body.className = theme === 'default' ? '' : theme;
@@ -120,7 +131,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     soundOptions.addEventListener('click', (e) => {
-        if (e.target.classList.contains('sound-option')) {
+        const target = e.target.closest('.sound-option');
+        if (target) {
             // Stop any currently playing audio
             Object.values(audio).forEach(sound => {
                 if (!sound.paused) {
@@ -128,9 +140,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            currentSound = e.target.dataset.sound;
-            soundOptions.querySelector('.selected').classList.remove('selected');
-            e.target.classList.add('selected');
+            currentSound = target.dataset.sound;
+            soundOptions.querySelector('.selected')?.classList.remove('selected');
+            target.classList.add('selected');
 
             // Play a sample of the new sound
             if (currentSound !== 'none') {
@@ -167,6 +179,11 @@ document.addEventListener('DOMContentLoaded', () => {
             timerInterval = null;
         }
 
+        if (timerCheckInterval) {
+            clearInterval(timerCheckInterval);
+            timerCheckInterval = null;
+        }
+
         remainingSeconds = totalSeconds; // Reset time
         updateTimerDisplay(); // Update display to initial time
         patternContainer.innerHTML = ''; // Clear the SVG pattern
@@ -187,21 +204,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const timeLeft = Math.ceil((endTime - now) / 1000);
 
             if (timeLeft < 0) {
-                remainingSeconds = 0;
-                updateTimerDisplay();
-                updatePattern();
-
-                cancelAnimationFrame(timerInterval);
-                timerInterval = null;
-                poolContainer.classList.remove('timer-active');
-                poolContainer.classList.add('timer-complete');
-                settingsButton.classList.remove('disabled');
-                fadeOutAudio();
+                completeTimer();
                 return;
             }
 
+            // Visual update only
             if (timeLeft !== remainingSeconds) {
-                remainingSeconds = timeLeft;
+                remainingSeconds = Math.max(0, timeLeft);
                 updateTimerDisplay();
                 updatePattern();
             }
@@ -209,7 +218,35 @@ document.addEventListener('DOMContentLoaded', () => {
             timerInterval = requestAnimationFrame(update);
         }
 
+        // Logic loop to check completion (works in background)
+        timerCheckInterval = setInterval(() => {
+            const now = Date.now();
+            if (now >= endTime) {
+                completeTimer();
+            }
+        }, 1000);
+
         timerInterval = requestAnimationFrame(update);
+    }
+
+    function completeTimer() {
+        if (timerInterval) {
+            cancelAnimationFrame(timerInterval);
+            timerInterval = null;
+        }
+        if (timerCheckInterval) {
+            clearInterval(timerCheckInterval);
+            timerCheckInterval = null;
+        }
+
+        remainingSeconds = 0;
+        updateTimerDisplay();
+        updatePattern();
+
+        poolContainer.classList.remove('timer-active');
+        poolContainer.classList.add('timer-complete');
+        settingsButton.classList.remove('disabled');
+        fadeOutAudio();
     }
 
     // Function to format and update the timer display
@@ -229,7 +266,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const numLines = 36; // Number of lines in the pattern, chosen for divisibility
         const angleStep = 360 / numLines; // Angle between each starting point
 
-        let svgHTML = `<svg viewBox="0 0 ${size} ${size}">`;
+        // Clear previous content safely
+        while (patternContainer.firstChild) {
+            patternContainer.removeChild(patternContainer.firstChild);
+        }
+
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
 
         for (let i = 0; i < numLines; i++) {
             // Calculate the angle for the current line's start point
@@ -257,12 +300,10 @@ document.addEventListener('DOMContentLoaded', () => {
             path.style.strokeDasharray = length;
             path.style.strokeDashoffset = length; // Start with the path fully hidden
 
-            // Append the path's outer HTML to the SVG string
-            svgHTML += path.outerHTML;
+            svg.appendChild(path);
         }
 
-        svgHTML += `</svg>`;
-        patternContainer.innerHTML = svgHTML; // Inject the generated SVG into the container
+        patternContainer.appendChild(svg);
     }
 
     // Function to update the drawing progress of the SVG pattern

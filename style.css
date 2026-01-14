@@ -28,12 +28,30 @@
     --transition-speed: 0.8s;
 }
 
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --transition-speed: 0s;
+    }
+
+    *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
 /* --- 1. Base & Background --- */
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
+
+:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
 }
 
 html, body {
