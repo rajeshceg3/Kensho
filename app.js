@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const startButton = document.getElementById('start-button');
     const resetButton = document.getElementById('reset-button');
     const timerDisplay = document.getElementById('timer-display');
+    const srStatus = document.getElementById('sr-status');
     const settingsButton = document.getElementById('settings-button');
     const settingsMenu = document.getElementById('settings-menu');
     const timeOptions = document.getElementById('time-options');
@@ -25,14 +26,81 @@ document.addEventListener('DOMContentLoaded', () => {
     let timerCheckInterval = null;
 
     // --- 1. Settings Panel Logic ---
+
+    function openSettings() {
+        settingsMenu.classList.add('active');
+        settingsButton.setAttribute('aria-expanded', 'true');
+        settingsMenu.focus(); // Move focus to the menu container
+        trapFocus(settingsMenu);
+    }
+
+    function closeSettings() {
+        if (!settingsMenu.classList.contains('active')) return;
+
+        settingsMenu.classList.remove('active');
+        settingsButton.setAttribute('aria-expanded', 'false');
+        settingsButton.focus(); // Return focus to the toggle button
+    }
+
+    function toggleSettings() {
+        if (settingsMenu.classList.contains('active')) {
+            closeSettings();
+        } else {
+            openSettings();
+        }
+    }
+
+    // Focus Trap Logic
+    function handleTrapFocus(e) {
+        if (!settingsMenu.classList.contains('active')) return;
+
+        const focusableElements = settingsMenu.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+        const isTabPressed = e.key === 'Tab' || e.keyCode === 9;
+
+        if (!isTabPressed) return;
+
+        if (e.shiftKey) { // Shift + Tab
+            if (document.activeElement === firstElement) {
+                lastElement.focus();
+                e.preventDefault();
+            }
+        } else { // Tab
+            if (document.activeElement === lastElement) {
+                firstElement.focus();
+                e.preventDefault();
+            }
+        }
+    }
+
+    // Add global listener for focus trap instead of adding it repeatedly
+    document.addEventListener('keydown', handleTrapFocus);
+
+    function trapFocus(element) {
+        // No-op: handled globally now
+    }
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && settingsMenu.classList.contains('active')) {
+            closeSettings();
+        }
+    });
+
     settingsButton.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent click from bubbling up to document
-        settingsMenu.classList.toggle('active');
+        e.stopPropagation();
+        toggleSettings();
     });
 
     document.addEventListener('click', (e) => {
-        if (!settingsMenu.contains(e.target) && settingsMenu.classList.contains('active')) {
-            settingsMenu.classList.remove('active');
+        if (!settingsMenu.contains(e.target) && settingsButton !== e.target && !settingsButton.contains(e.target) && settingsMenu.classList.contains('active')) {
+            closeSettings();
         }
     });
 
@@ -107,10 +175,16 @@ document.addEventListener('DOMContentLoaded', () => {
             remainingSeconds = totalSeconds;
 
             // Update UI
-            timeOptions.querySelector('.selected')?.classList.remove('selected');
+            const previous = timeOptions.querySelector('.selected');
+            if (previous) {
+                previous.classList.remove('selected');
+                previous.setAttribute('aria-checked', 'false');
+            }
             target.classList.add('selected');
+            target.setAttribute('aria-checked', 'true');
+
             updateTimerDisplay();
-            settingsMenu.classList.remove('active'); // Close menu
+            // closeSettings(); // Removed auto-close to allow user to adjust other settings
         }
     });
 
@@ -120,13 +194,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const theme = target.dataset.theme;
 
             // Update UI
-            themeOptions.querySelector('.selected')?.classList.remove('selected');
+            const previous = themeOptions.querySelector('.selected');
+            if (previous) {
+                previous.classList.remove('selected');
+                previous.setAttribute('aria-checked', 'false');
+            }
             target.classList.add('selected');
+            target.setAttribute('aria-checked', 'true');
 
             // Update body class
             document.body.className = theme === 'default' ? '' : theme;
-
-            settingsMenu.classList.remove('active'); // Close menu
         }
     });
 
@@ -141,8 +218,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             currentSound = target.dataset.sound;
-            soundOptions.querySelector('.selected')?.classList.remove('selected');
+
+            const previous = soundOptions.querySelector('.selected');
+            if (previous) {
+                previous.classList.remove('selected');
+                previous.setAttribute('aria-checked', 'false');
+            }
             target.classList.add('selected');
+            target.setAttribute('aria-checked', 'true');
 
             // Play a sample of the new sound
             if (currentSound !== 'none') {
@@ -162,8 +245,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event listener for the Start Focus button
     startButton.addEventListener('click', () => {
         if (timerInterval) return; // Prevent multiple timers
+
+        // Close settings if open
+        if (settingsMenu.classList.contains('active')) {
+            settingsMenu.classList.remove('active');
+            settingsButton.setAttribute('aria-expanded', 'false');
+        }
+
         poolContainer.classList.add('timer-active'); // Activate timer UI state
         settingsButton.classList.add('disabled');
+        settingsButton.setAttribute('disabled', 'true');
+
+        announceStatus(`Focus timer started. ${durationMinutes} minutes remaining.`);
         startTimer();
         fadeInAudio();
     });
@@ -173,6 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Remove timer states
         poolContainer.classList.remove('timer-active', 'timer-complete');
         settingsButton.classList.remove('disabled');
+        settingsButton.removeAttribute('disabled');
 
         if (timerInterval) {
             cancelAnimationFrame(timerInterval); // Stop any active timer
@@ -188,7 +282,12 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTimerDisplay(); // Update display to initial time
         patternContainer.innerHTML = ''; // Clear the SVG pattern
         fadeOutAudio();
+        announceStatus("Timer reset.");
     });
+
+    function announceStatus(message) {
+        srStatus.textContent = message;
+    }
 
     // Function to start the focus timer
     function startTimer() {
@@ -246,7 +345,9 @@ document.addEventListener('DOMContentLoaded', () => {
         poolContainer.classList.remove('timer-active');
         poolContainer.classList.add('timer-complete');
         settingsButton.classList.remove('disabled');
+        settingsButton.removeAttribute('disabled');
         fadeOutAudio();
+        announceStatus("Focus session complete.");
     }
 
     // Function to format and update the timer display
