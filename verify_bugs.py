@@ -1,38 +1,68 @@
+
 from playwright.sync_api import sync_playwright
 
 def verify_bugs():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
-        page.goto("http://localhost:8080")
+        page.goto("http://localhost:8000")
 
-        # 1. Check initial timer display
-        timer_display = page.locator("#timer-display")
-        initial_text = timer_display.text_content()
-        print(f"Initial Timer Display: '{initial_text}'")
+        # 1. Check title
+        print(f"Title: {page.title()}")
+        assert "Kenshō" in page.title()
 
-        # 2. Check Settings Menu Focus Trap
-        settings_button = page.locator("#settings-button")
-        settings_button.click()
+        # 2. Check accessibility of pool-container
+        pool = page.locator("#pool-container")
+        print(f"Pool role: {pool.get_attribute('role')}")
+        print(f"Pool tabindex: {pool.get_attribute('tabindex')}")
 
-        # Check if settings menu is active
-        settings_menu = page.locator("#settings-menu")
-        is_active = settings_menu.get_attribute("class")
-        print(f"Settings Menu Class: '{is_active}'")
+        # 3. Check for settings menu visibility and interaction
+        settings_btn = page.locator("#settings-button")
+        settings_btn.click()
 
-        # Try to tab out
-        # We can't easily simulate "tabbing out" and checking focus in headless easily without complex steps,
-        # but we can check if there are focus listeners or if the implementation handles it.
-        # For now, let's just take a screenshot of the open menu.
-        page.screenshot(path="bug_report_1.png")
+        menu = page.locator("#settings-menu")
+        if menu.is_visible():
+            print("Settings menu opened.")
+        else:
+            print("Settings menu failed to open.")
 
-        # 3. Check Escape key
+        # 4. Check Focus Trap
+        # Tab into the menu
+        page.keyboard.press("Tab")
+        focused = page.evaluate("document.activeElement.id")
+        # First element might be 'settings-title' (if focusable?) or first button.
+        # Looking at HTML, first focusable is likely 'time-options' children.
+        # Actually logic says 'firstElement.focus()'.
+
+        # Let's see what is focused.
+        # The app logic says: settingsMenu.focus().
+        # Then handleTrapFocus should keep it inside.
+
+        # Let's traverse all buttons.
+        focusable_count = menu.locator("button").count()
+        print(f"Focusable elements in menu: {focusable_count}")
+
+        for i in range(focusable_count):
+            page.keyboard.press("Tab")
+
+        # After cycling through, next tab should go back to first.
+        page.keyboard.press("Tab")
+        # Verify we are still in menu
+        focused_element = page.evaluate("document.activeElement")
+        is_inside = page.evaluate("document.getElementById('settings-menu').contains(document.activeElement)")
+        if is_inside:
+            print("Focus Trap: PASS (Focus remained inside menu)")
+        else:
+            print("Focus Trap: FAIL (Focus escaped menu)")
+
+        # 5. Check Escape key
         page.keyboard.press("Escape")
-        # Check if menu is closed (class active removed)
-        # Note: transitions take time.
+        # Wait for transition
         page.wait_for_timeout(500)
-        is_active_after_esc = settings_menu.get_attribute("class")
-        print(f"Settings Menu Class after Escape: '{is_active_after_esc}'")
+        if not menu.is_visible():
+            print("Escape Key: PASS (Menu closed)")
+        else:
+            print("Escape Key: FAIL (Menu remained open)")
 
         browser.close()
 
