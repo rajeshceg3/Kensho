@@ -20,6 +20,9 @@ def verify_bugs():
         settings_btn = page.locator("#settings-button")
         settings_btn.click()
 
+        # Wait for transition
+        page.wait_for_timeout(500)
+
         menu = page.locator("#settings-menu")
         if menu.is_visible():
             print("Settings menu opened.")

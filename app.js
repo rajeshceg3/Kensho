@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let remainingSeconds = totalSeconds;
     let timerInterval = null;
     let timerCheckInterval = null;
+    let cachedPaths = [];
 
     // --- 1. Settings Panel Logic ---
 
@@ -54,9 +55,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleTrapFocus(e) {
         if (!settingsMenu.classList.contains('active')) return;
 
-        const focusableElements = settingsMenu.querySelectorAll(
+        // Select all interactive elements and filter by tabIndex to respect roving tabindex
+        const rawElements = settingsMenu.querySelectorAll(
             'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         );
+        const focusableElements = Array.from(rawElements).filter(el => el.tabIndex >= 0 && !el.disabled);
 
         if (focusableElements.length === 0) return;
 
@@ -81,10 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add global listener for focus trap instead of adding it repeatedly
     document.addEventListener('keydown', handleTrapFocus);
-
-    function trapFocus(element) {
-        // No-op: handled globally now
-    }
 
     // Close on Escape key
     document.addEventListener('keydown', (e) => {
@@ -166,6 +165,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. Timer and Pattern Logic ---
 
+    // Accessibility: Roving Tabindex for Radio Groups
+    function setupRadioGroup(container) {
+        const radios = Array.from(container.querySelectorAll('[role="radio"]'));
+        if (radios.length === 0) return;
+
+        // Initialize tabindex based on aria-checked
+        radios.forEach(radio => {
+            if (radio.getAttribute('aria-checked') === 'true') {
+                radio.tabIndex = 0;
+            } else {
+                radio.tabIndex = -1;
+            }
+        });
+
+        container.addEventListener('keydown', (e) => {
+            const target = e.target;
+            const index = radios.indexOf(target);
+            if (index === -1) return;
+
+            let nextIndex = -1;
+
+            switch (e.key) {
+                case 'ArrowRight':
+                case 'ArrowDown':
+                    nextIndex = (index + 1) % radios.length;
+                    e.preventDefault();
+                    break;
+                case 'ArrowLeft':
+                case 'ArrowUp':
+                    nextIndex = (index - 1 + radios.length) % radios.length;
+                    e.preventDefault();
+                    break;
+            }
+
+            if (nextIndex !== -1) {
+                radios[nextIndex].focus();
+                radios[nextIndex].click();
+            }
+        });
+    }
+
+    setupRadioGroup(timeOptions);
+    setupRadioGroup(themeOptions);
+    setupRadioGroup(soundOptions);
+
     timeOptions.addEventListener('click', (e) => {
         const target = e.target.closest('.time-option');
         if (target) {
@@ -179,9 +223,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (previous) {
                 previous.classList.remove('selected');
                 previous.setAttribute('aria-checked', 'false');
+                previous.tabIndex = -1;
             }
             target.classList.add('selected');
             target.setAttribute('aria-checked', 'true');
+            target.tabIndex = 0;
 
             updateTimerDisplay();
             // closeSettings(); // Removed auto-close to allow user to adjust other settings
@@ -198,9 +244,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (previous) {
                 previous.classList.remove('selected');
                 previous.setAttribute('aria-checked', 'false');
+                previous.tabIndex = -1;
             }
             target.classList.add('selected');
             target.setAttribute('aria-checked', 'true');
+            target.tabIndex = 0;
 
             // Update body class
             document.body.className = theme === 'default' ? '' : theme;
@@ -223,9 +271,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (previous) {
                 previous.classList.remove('selected');
                 previous.setAttribute('aria-checked', 'false');
+                previous.tabIndex = -1;
             }
             target.classList.add('selected');
             target.setAttribute('aria-checked', 'true');
+            target.tabIndex = 0;
 
             // Play a sample of the new sound
             if (currentSound !== 'none') {
@@ -256,6 +306,8 @@ document.addEventListener('DOMContentLoaded', () => {
         settingsButton.classList.add('disabled');
         settingsButton.setAttribute('disabled', 'true');
 
+        resetButton.focus(); // Move focus to Reset button
+
         announceStatus(`Focus timer started. ${durationMinutes} minutes remaining.`);
         startTimer();
         fadeInAudio();
@@ -281,6 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
         remainingSeconds = totalSeconds; // Reset time
         updateTimerDisplay(); // Update display to initial time
         patternContainer.innerHTML = ''; // Clear the SVG pattern
+        cachedPaths = [];
         fadeOutAudio();
         announceStatus("Timer reset.");
     });
@@ -307,12 +360,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Visual update only
+            // Update timer display (once per second)
             if (timeLeft !== remainingSeconds) {
                 remainingSeconds = Math.max(0, timeLeft);
                 updateTimerDisplay();
-                updatePattern();
             }
+
+            // Update pattern (every frame for smoothness)
+            const elapsedTime = now - startTime;
+            const totalTimeMS = totalSeconds * 1000;
+            const progress = Math.min(1, Math.max(0, elapsedTime / totalTimeMS));
+            updatePattern(progress);
 
             timerInterval = requestAnimationFrame(update);
         }
@@ -340,7 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         remainingSeconds = 0;
         updateTimerDisplay();
-        updatePattern();
+        updatePattern(1);
 
         poolContainer.classList.remove('timer-active');
         poolContainer.classList.add('timer-complete');
@@ -405,18 +463,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         patternContainer.appendChild(svg);
+        cachedPaths = Array.from(svg.querySelectorAll('path'));
     }
 
     // Function to update the drawing progress of the SVG pattern
-    function updatePattern() {
-        const paths = patternContainer.querySelectorAll('path');
-        if (paths.length === 0) return; // Exit if no paths are found
-
-        // Calculate the current progress of the timer (0 to 1)
-        const progress = (totalSeconds - remainingSeconds) / totalSeconds;
+    function updatePattern(progress) {
+        if (cachedPaths.length === 0) return;
 
         // Iterate over each path and update its stroke-dashoffset to reveal it
-        paths.forEach(path => {
+        cachedPaths.forEach(path => {
             const length = parseFloat(path.style.strokeDasharray);
             // The offset decreases as progress increases, revealing the line
             path.style.strokeDashoffset = length * (1 - progress);
