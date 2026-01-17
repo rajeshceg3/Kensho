@@ -31,8 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function openSettings() {
         settingsMenu.classList.add('active');
         settingsButton.setAttribute('aria-expanded', 'true');
+        document.querySelector('main').setAttribute('inert', ''); // Trap focus strictly
         settingsMenu.focus(); // Move focus to the menu container
-        trapFocus(settingsMenu);
     }
 
     function closeSettings() {
@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         settingsMenu.classList.remove('active');
         settingsButton.setAttribute('aria-expanded', 'false');
+        document.querySelector('main').removeAttribute('inert');
         settingsButton.focus(); // Return focus to the toggle button
     }
 
@@ -70,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isTabPressed) return;
 
         if (e.shiftKey) { // Shift + Tab
-            if (document.activeElement === firstElement) {
+            if (document.activeElement === firstElement || document.activeElement === settingsMenu) {
                 lastElement.focus();
                 e.preventDefault();
             }

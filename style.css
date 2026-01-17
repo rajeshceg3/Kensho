@@ -235,8 +235,9 @@ main {
     padding: 1rem 2rem;
     border-radius: 50px;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.3s ease, opacity var(--transition-speed) ease-out;
+    transition: background-color 0.3s ease, transform 0.3s ease, opacity var(--transition-speed) ease-out, visibility 0s;
     opacity: 1;
+    visibility: visible;
     transform: translateY(0);
     /* Responsive padding and font size for buttons */
     padding: clamp(0.8rem, 3vw, 1rem) clamp(1.5rem, 6vw, 2rem);
@@ -254,8 +255,9 @@ main {
     letter-spacing: 0.05em;
     color: var(--color-text-secondary);
     opacity: 0;
+    visibility: hidden;
     position: absolute; /* Allows for smooth cross-fade */
-    transition: opacity var(--transition-speed) ease-out;
+    transition: opacity var(--transition-speed) ease-out, visibility 0s linear var(--transition-speed);
     pointer-events: none;
     /* Responsive font size for timer */
     font-size: clamp(2.5rem, 10vw, 4rem);
@@ -263,34 +265,46 @@ main {
 
 .timer-active #start-button {
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
     transform: translateY(10px);
+    transition: opacity var(--transition-speed) ease-out, transform var(--transition-speed) ease-out, visibility 0s linear var(--transition-speed);
 }
 
 .timer-active #timer-display {
     opacity: 1;
+    visibility: visible;
+    transition: opacity var(--transition-speed) ease-out, visibility 0s;
 }
 
 #reset-button {
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
     position: absolute; /* Sits under the timer display */
     transform: translateY(10px);
+    transition: opacity var(--transition-speed) ease-out, transform var(--transition-speed) ease-out, visibility 0s linear var(--transition-speed);
 }
 
 /* Allow resetting during active timer */
 .timer-active #reset-button {
     opacity: 1;
+    visibility: visible;
     pointer-events: all;
     transform: translateY(80px); /* Position below the timer display */
+    transition: opacity var(--transition-speed) ease-out, transform var(--transition-speed) ease-out, visibility 0s;
 }
 
 .timer-complete #timer-display {
      opacity: 0;
+     visibility: hidden;
+     transition: opacity var(--transition-speed) ease-out, visibility 0s linear var(--transition-speed);
 }
 
 .timer-complete #reset-button {
     opacity: 1;
+    visibility: visible;
     pointer-events: all;
     transform: translateY(0);
+    transition: opacity var(--transition-speed) ease-out, transform var(--transition-speed) ease-out, visibility 0s;
 }
