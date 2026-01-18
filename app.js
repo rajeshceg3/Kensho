@@ -231,6 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
             target.tabIndex = 0;
 
             updateTimerDisplay();
+            startButton.textContent = `Start Focus (${durationMinutes}m)`;
             // closeSettings(); // Removed auto-close to allow user to adjust other settings
         }
     });
@@ -261,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target) {
             // Stop any currently playing audio
             Object.values(audio).forEach(sound => {
-                if (!sound.paused) {
+                if (sound && !sound.paused) {
                     fadeAudio(sound, sound.volume, 0, 200);
                 }
             });
@@ -281,14 +282,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // Play a sample of the new sound
             if (currentSound !== 'none') {
                 const sound = audio[currentSound];
-                sound.currentTime = 0;
-                fadeAudio(sound, 0, 0.5, 500, () => {
-                    setTimeout(() => {
-                        if (!sound.paused) {
-                            fadeAudio(sound, sound.volume, 0, 500);
-                        }
-                    }, 1000);
-                });
+                if (sound) {
+                    sound.currentTime = 0;
+                    fadeAudio(sound, 0, 0.5, 500, () => {
+                        setTimeout(() => {
+                            if (sound && !sound.paused) {
+                                fadeAudio(sound, sound.volume, 0, 500);
+                            }
+                        }, 1000);
+                    });
+                }
             }
         }
     });
@@ -333,6 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         remainingSeconds = totalSeconds; // Reset time
         updateTimerDisplay(); // Update display to initial time
+        startButton.textContent = `Start Focus (${durationMinutes}m)`;
         patternContainer.innerHTML = ''; // Clear the SVG pattern
         cachedPaths = [];
         fadeOutAudio();
@@ -413,8 +417,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateTimerDisplay() {
         const minutes = Math.floor(remainingSeconds / 60);
         const seconds = remainingSeconds % 60;
-        // Pad seconds with a leading zero if less than 10
-        timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        // Pad both minutes and seconds with a leading zero
+        timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 
     // --- 4. Generative SVG Pattern ---
@@ -486,13 +490,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const activeFades = new Map();
 
     function fadeAudio(sound, from, to, duration, onComplete) {
+        if (!sound) return;
+
         // Clear any existing fade interval for this specific sound
         if (activeFades.has(sound)) {
             clearInterval(activeFades.get(sound));
             activeFades.delete(sound);
         }
 
-        sound.volume = from;
+        try {
+            sound.volume = from;
+        } catch (e) {
+            console.error("Error setting volume:", e);
+            return;
+        }
+
         if (from < to) {
             // Promise handling for play() to avoid "play() request interrupted" errors
             const playPromise = sound.play();
@@ -501,6 +513,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Auto-play was prevented.
                     // This is expected if user hasn't interacted yet.
                     console.warn("Audio play blocked:", error);
+                    // Stop fading if play failed
+                    if (activeFades.has(sound)) {
+                        clearInterval(activeFades.get(sound));
+                        activeFades.delete(sound);
+                    }
                 });
             }
         }
@@ -535,14 +552,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function fadeInAudio() {
         if (currentSound !== 'none') {
             const sound = audio[currentSound];
-            sound.currentTime = 0;
-            fadeAudio(sound, 0, 1, 1000);
+            if (sound) {
+                sound.currentTime = 0;
+                fadeAudio(sound, 0, 1, 1000);
+            }
         }
     }
 
     function fadeOutAudio() {
         Object.values(audio).forEach(sound => {
-            if (!sound.paused) {
+            if (sound && !sound.paused) {
                 fadeAudio(sound, sound.volume, 0, 1000);
             }
         });
@@ -557,6 +576,7 @@ document.addEventListener('DOMContentLoaded', () => {
             totalSeconds = durationMinutes * 60;
             remainingSeconds = totalSeconds;
             updateTimerDisplay();
+            startButton.textContent = `Start Focus (${durationMinutes}m)`;
         }
 
         // Set initial theme
