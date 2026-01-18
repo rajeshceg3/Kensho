@@ -50,8 +50,9 @@
 }
 
 :focus-visible {
-    outline: 3px solid var(--color-accent);
+    outline: 2px solid var(--color-text-primary);
     outline-offset: 2px;
+    box-shadow: 0 0 0 4px var(--color-bg-start);
 }
 
 html, body {
@@ -253,6 +254,7 @@ main {
     font-size: 4rem;
     font-weight: 800;
     letter-spacing: 0.05em;
+    font-variant-numeric: tabular-nums;
     color: var(--color-text-secondary);
     opacity: 0;
     visibility: hidden;
