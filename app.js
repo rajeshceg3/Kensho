@@ -340,6 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
         patternContainer.innerHTML = ''; // Clear the SVG pattern
         cachedPaths = [];
         fadeOutAudio();
+        startButton.focus(); // Return focus to start button
         announceStatus("Timer reset.");
     });
 
@@ -404,6 +405,11 @@ document.addEventListener('DOMContentLoaded', () => {
         remainingSeconds = 0;
         updateTimerDisplay();
         updatePattern(1);
+
+        // If focus is on the reset button (which is about to disappear), move it to start button
+        if (document.activeElement === resetButton) {
+            startButton.focus();
+        }
 
         poolContainer.classList.remove('timer-active');
         poolContainer.classList.add('timer-complete');

@@ -304,9 +304,9 @@ main {
 }
 
 .timer-complete #reset-button {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: all;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
     transform: translateY(0);
-    transition: opacity var(--transition-speed) ease-out, transform var(--transition-speed) ease-out, visibility 0s;
+    transition: opacity var(--transition-speed) ease-out, transform var(--transition-speed) ease-out, visibility 0s linear var(--transition-speed);
 }
