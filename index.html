@@ -7,7 +7,7 @@
     <meta property="og:title" content="Kenshō">
     <meta property="og:description" content="Focus timer with ambient soundscapes and generative art.">
     <meta property="og:type" content="website">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; media-src 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; font-src 'self' https://fonts.gstatic.com; style-src 'self' https://fonts.googleapis.com; media-src 'self';">
     <title>Kenshō</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,8 +59,8 @@
     <main>
         <h1 class="title">Kenshō</h1>
         
-        <div id="pool-container" role="button" tabindex="0" aria-label="Interactive Pool. Click or press Enter to create ripples.">
-            <div class="pool-shape"></div>
+        <div id="pool-container">
+            <div id="pool-surface" class="pool-shape" role="button" tabindex="0" aria-label="Interactive Pool. Click or press Enter to create ripples."></div>
             
             <div id="pattern-container" aria-hidden="true">
                 <!-- SVG for the geometric pattern will be injected here by JS -->
