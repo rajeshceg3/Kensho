@@ -11,10 +11,10 @@ def verify_bugs():
         print(f"Title: {page.title()}")
         assert "Kenshō" in page.title()
 
-        # 2. Check accessibility of pool-container
-        pool = page.locator("#pool-container")
-        print(f"Pool role: {pool.get_attribute('role')}")
-        print(f"Pool tabindex: {pool.get_attribute('tabindex')}")
+        # 2. Check accessibility of pool-surface
+        pool_surface = page.locator("#pool-surface")
+        print(f"Pool role: {pool_surface.get_attribute('role')}")
+        print(f"Pool tabindex: {pool_surface.get_attribute('tabindex')}")
 
         # 3. Check for settings menu visibility and interaction
         settings_btn = page.locator("#settings-button")

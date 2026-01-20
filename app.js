@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     const poolContainer = document.getElementById('pool-container');
+    const poolSurface = document.getElementById('pool-surface');
     const patternContainer = document.getElementById('pattern-container');
     const startButton = document.getElementById('start-button');
     const resetButton = document.getElementById('reset-button');
@@ -139,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1500); // Matches the ripple-effect animation duration
     }
 
-    poolContainer.addEventListener('click', (e) => {
+    poolSurface.addEventListener('click', (e) => {
         // Prevent ripples while timer is active to maintain focus
         if (poolContainer.classList.contains('timer-active')) return;
 
@@ -151,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         createRipple(x, y);
     });
 
-    poolContainer.addEventListener('keydown', (e) => {
+    poolSurface.addEventListener('keydown', (e) => {
         if (poolContainer.classList.contains('timer-active')) return;
 
         if (e.key === 'Enter' || e.key === ' ') {
@@ -196,6 +197,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'ArrowLeft':
                 case 'ArrowUp':
                     nextIndex = (index - 1 + radios.length) % radios.length;
+                    e.preventDefault();
+                    break;
+                case 'Home':
+                    nextIndex = 0;
+                    e.preventDefault();
+                    break;
+                case 'End':
+                    nextIndex = radios.length - 1;
                     e.preventDefault();
                     break;
             }
