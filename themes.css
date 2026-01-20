@@ -125,6 +125,23 @@
     box-shadow: 0 0 0 3px var(--color-accent);
 }
 
+/* Theme Dot Gradients */
+.theme-dot[data-theme="default"] {
+    background: linear-gradient(135deg, #f2eef7, #d8e7f2);
+}
+
+.theme-dot[data-theme="theme-sunrise"] {
+    background: linear-gradient(135deg, #fde5c8, #f9cbb4);
+}
+
+.theme-dot[data-theme="theme-forest"] {
+    background: linear-gradient(135deg, #e0f2e9, #cde4d4);
+}
+
+.theme-dot[data-theme="theme-twilight"] {
+    background: linear-gradient(135deg, #c3d4e0, #3b4d61);
+}
+
 /* --- 7. Color Themes --- */
 
 /* Theme: Sunrise */
