@@ -19,6 +19,26 @@ document.addEventListener('DOMContentLoaded', () => {
         waves: document.getElementById('audio-waves'),
     };
 
+    // Audio Error Handling
+    Object.keys(audio).forEach(key => {
+        const sound = audio[key];
+        if (sound) {
+            sound.addEventListener('error', (e) => {
+                console.error(`Audio error for ${key}:`, e);
+                const option = soundOptions.querySelector(`[data-sound="${key}"]`);
+                if (option) {
+                    option.classList.add('disabled');
+                    option.setAttribute('disabled', 'true');
+                    option.style.opacity = '0.5';
+                    option.style.pointerEvents = 'none';
+                    if (!option.textContent.includes('(Unavailable)')) {
+                         option.textContent += ' (Unavailable)';
+                    }
+                }
+            });
+        }
+    });
+
     let currentSound = 'none';
     let durationMinutes = 15; // Default duration
     let totalSeconds = durationMinutes * 60;
@@ -224,8 +244,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = e.target.closest('.time-option');
         if (target) {
             // Update duration
-            durationMinutes = parseInt(target.dataset.time);
-            totalSeconds = durationMinutes * 60;
+            durationMinutes = parseFloat(target.dataset.time);
+            totalSeconds = Math.floor(durationMinutes * 60);
             remainingSeconds = totalSeconds;
 
             // Update UI
@@ -241,6 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateTimerDisplay();
             startButton.textContent = `Start Focus (${durationMinutes}m)`;
+            startButton.setAttribute('aria-label', `Start Focus ${durationMinutes} minutes`);
             // closeSettings(); // Removed auto-close to allow user to adjust other settings
         }
     });
@@ -346,6 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
         remainingSeconds = totalSeconds; // Reset time
         updateTimerDisplay(); // Update display to initial time
         startButton.textContent = `Start Focus (${durationMinutes}m)`;
+        startButton.setAttribute('aria-label', `Start Focus ${durationMinutes} minutes`);
         patternContainer.innerHTML = ''; // Clear the SVG pattern
         cachedPaths = [];
         fadeOutAudio();
@@ -412,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         remainingSeconds = 0;
-        updateTimerDisplay();
+        timerDisplay.textContent = "Done"; // Show completion message
         updatePattern(1);
 
         // If focus is on the reset button (which is about to disappear), move it to start button
@@ -425,6 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
         settingsButton.classList.remove('disabled');
         settingsButton.removeAttribute('disabled');
         fadeOutAudio();
+        playChime();
         announceStatus("Focus session complete.");
     }
 
@@ -503,6 +526,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 5. Audio Controls ---
     const activeFades = new Map();
+    let audioContext = null;
+
+    function playChime() {
+        try {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            // Resume context if suspended (browser policy)
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            // Bell-like sound (Sine wave with envelope)
+            const now = audioContext.currentTime;
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(523.25, now); // C5
+
+            // Envelope
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(0.3, now + 0.05); // Quick attack
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 3); // Long decay
+
+            oscillator.start(now);
+            oscillator.stop(now + 3);
+        } catch (e) {
+            console.error("Error playing chime:", e);
+        }
+    }
 
     function fadeAudio(sound, from, to, duration, onComplete) {
         if (!sound) return;
@@ -587,11 +644,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Set initial time
         const initialTime = timeOptions.querySelector('.selected');
         if (initialTime) {
-            durationMinutes = parseInt(initialTime.dataset.time);
-            totalSeconds = durationMinutes * 60;
+            durationMinutes = parseFloat(initialTime.dataset.time);
+            totalSeconds = Math.floor(durationMinutes * 60);
             remainingSeconds = totalSeconds;
             updateTimerDisplay();
             startButton.textContent = `Start Focus (${durationMinutes}m)`;
+            startButton.setAttribute('aria-label', `Start Focus ${durationMinutes} minutes`);
         }
 
         // Set initial theme

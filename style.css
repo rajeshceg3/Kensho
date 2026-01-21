@@ -299,9 +299,10 @@ main {
 }
 
 .timer-complete #timer-display {
-     opacity: 0;
-     visibility: hidden;
-     transition: opacity var(--transition-speed) ease-out, visibility 0s linear var(--transition-speed);
+     opacity: 1;
+     visibility: visible;
+     transform: translateY(-80px); /* Move up to avoid overlap */
+     transition: opacity var(--transition-speed) ease-out, transform var(--transition-speed) ease-out, visibility 0s;
 }
 
 .timer-complete #reset-button {
