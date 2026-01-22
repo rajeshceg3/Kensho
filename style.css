@@ -224,6 +224,7 @@ main {
     justify-content: center;
     gap: 1rem;
     z-index: 10;
+    pointer-events: none; /* Allow clicks to pass through to the pool */
 }
 
 .control-button {
@@ -241,6 +242,7 @@ main {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
+    pointer-events: auto; /* Re-enable clicks for buttons */
     /* Responsive padding and font size for buttons */
     padding: clamp(0.8rem, 3vw, 1rem) clamp(1.5rem, 6vw, 2rem);
     font-size: clamp(1rem, 4vw, 1.2rem);

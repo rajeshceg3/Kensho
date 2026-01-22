@@ -47,6 +47,29 @@ document.addEventListener('DOMContentLoaded', () => {
     let timerCheckInterval = null;
     let cachedPaths = [];
 
+    // --- Persistence Logic ---
+    function saveSettings() {
+        const settings = {
+            theme: document.body.className || 'default',
+            time: durationMinutes,
+            sound: currentSound
+        };
+        localStorage.setItem('kensho-settings', JSON.stringify(settings));
+    }
+
+    function loadSettings() {
+        const saved = localStorage.getItem('kensho-settings');
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch (e) {
+                console.error("Error loading settings:", e);
+                return null;
+            }
+        }
+        return null;
+    }
+
     // --- 1. Settings Panel Logic ---
 
     function openSettings() {
@@ -262,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateTimerDisplay();
             startButton.textContent = `Start Focus (${durationMinutes}m)`;
             startButton.setAttribute('aria-label', `Start Focus ${durationMinutes} minutes`);
-            // closeSettings(); // Removed auto-close to allow user to adjust other settings
+            saveSettings();
         }
     });
 
@@ -284,6 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Update body class
             document.body.className = theme === 'default' ? '' : theme;
+            saveSettings();
         }
     });
 
@@ -308,6 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
             target.classList.add('selected');
             target.setAttribute('aria-checked', 'true');
             target.tabIndex = 0;
+            saveSettings();
 
             // Play a sample of the new sound
             if (currentSound !== 'none') {
@@ -641,27 +666,75 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 6. Initialization ---
     function initialize() {
-        // Set initial time
-        const initialTime = timeOptions.querySelector('.selected');
-        if (initialTime) {
-            durationMinutes = parseFloat(initialTime.dataset.time);
-            totalSeconds = Math.floor(durationMinutes * 60);
-            remainingSeconds = totalSeconds;
-            updateTimerDisplay();
-            startButton.textContent = `Start Focus (${durationMinutes}m)`;
-            startButton.setAttribute('aria-label', `Start Focus ${durationMinutes} minutes`);
+        const savedSettings = loadSettings();
+
+        // 1. Restore Theme
+        let themeToSet = 'default';
+        if (savedSettings && savedSettings.theme) {
+            themeToSet = savedSettings.theme;
+        }
+        document.body.className = themeToSet === 'default' ? '' : themeToSet;
+
+        // Update Theme UI
+        const themeDot = themeOptions.querySelector(`[data-theme="${themeToSet}"]`) || themeOptions.querySelector('[data-theme="default"]');
+        if (themeDot) {
+            const currentSelected = themeOptions.querySelector('.selected');
+            if (currentSelected) {
+                currentSelected.classList.remove('selected');
+                currentSelected.setAttribute('aria-checked', 'false');
+                currentSelected.tabIndex = -1;
+            }
+            themeDot.classList.add('selected');
+            themeDot.setAttribute('aria-checked', 'true');
+            themeDot.tabIndex = 0;
         }
 
-        // Set initial theme
-        const initialThemeDot = themeOptions.querySelector('[data-theme="default"]');
-        if(initialThemeDot) {
-            initialThemeDot.classList.add('selected');
+        // 2. Restore Time
+        let timeToSet = 15;
+        if (savedSettings && savedSettings.time) {
+            timeToSet = savedSettings.time;
+        }
+        durationMinutes = timeToSet;
+        totalSeconds = Math.floor(durationMinutes * 60);
+        remainingSeconds = totalSeconds;
+
+        // Update Time UI
+        const timeOption = timeOptions.querySelector(`[data-time="${timeToSet}"]`) || timeOptions.querySelector('[data-time="15"]');
+        if (timeOption) {
+             const currentSelected = timeOptions.querySelector('.selected');
+             if (currentSelected) {
+                 currentSelected.classList.remove('selected');
+                 currentSelected.setAttribute('aria-checked', 'false');
+                 currentSelected.tabIndex = -1;
+             }
+             timeOption.classList.add('selected');
+             timeOption.setAttribute('aria-checked', 'true');
+             timeOption.tabIndex = 0;
         }
 
-        // Set initial sound
-        const initialSound = soundOptions.querySelector('[data-sound="none"]');
-        if (initialSound) {
-            initialSound.classList.add('selected');
+        updateTimerDisplay();
+        startButton.textContent = `Start Focus (${durationMinutes}m)`;
+        startButton.setAttribute('aria-label', `Start Focus ${durationMinutes} minutes`);
+
+        // 3. Restore Sound
+        let soundToSet = 'none';
+        if (savedSettings && savedSettings.sound) {
+            soundToSet = savedSettings.sound;
+        }
+        currentSound = soundToSet;
+
+        // Update Sound UI
+        const soundOption = soundOptions.querySelector(`[data-sound="${soundToSet}"]`) || soundOptions.querySelector('[data-sound="none"]');
+        if (soundOption) {
+            const currentSelected = soundOptions.querySelector('.selected');
+            if (currentSelected) {
+                currentSelected.classList.remove('selected');
+                currentSelected.setAttribute('aria-checked', 'false');
+                currentSelected.tabIndex = -1;
+            }
+            soundOption.classList.add('selected');
+            soundOption.setAttribute('aria-checked', 'true');
+            soundOption.tabIndex = 0;
         }
     }
 
