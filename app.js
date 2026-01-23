@@ -49,23 +49,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Persistence Logic ---
     function saveSettings() {
-        const settings = {
-            theme: document.body.className || 'default',
-            time: durationMinutes,
-            sound: currentSound
-        };
-        localStorage.setItem('kensho-settings', JSON.stringify(settings));
+        try {
+            const settings = {
+                theme: document.body.className || 'default',
+                time: durationMinutes,
+                sound: currentSound
+            };
+            localStorage.setItem('kensho-settings', JSON.stringify(settings));
+        } catch (e) {
+            console.error("Error saving settings:", e);
+        }
     }
 
     function loadSettings() {
-        const saved = localStorage.getItem('kensho-settings');
-        if (saved) {
-            try {
+        try {
+            const saved = localStorage.getItem('kensho-settings');
+            if (saved) {
                 return JSON.parse(saved);
-            } catch (e) {
-                console.error("Error loading settings:", e);
-                return null;
             }
+        } catch (e) {
+            console.error("Error loading settings:", e);
+            return null;
         }
         return null;
     }
@@ -355,6 +359,14 @@ document.addEventListener('DOMContentLoaded', () => {
     startButton.addEventListener('click', () => {
         if (timerInterval) return; // Prevent multiple timers
 
+        // Initialize/Resume Audio Context on user interaction
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+
         // Close settings if open
         if (settingsMenu.classList.contains('active')) {
             settingsMenu.classList.remove('active');
@@ -460,6 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         remainingSeconds = 0;
         timerDisplay.textContent = "Done"; // Show completion message
+        document.title = "Done - Kenshō";
         updatePattern(1);
 
         // If focus is on the reset button (which is about to disappear), move it to start button
@@ -481,7 +494,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const minutes = Math.floor(remainingSeconds / 60);
         const seconds = remainingSeconds % 60;
         // Pad both minutes and seconds with a leading zero
-        timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        timerDisplay.textContent = timeString;
+
+        if (poolContainer.classList.contains('timer-active')) {
+            document.title = `${timeString} - Kenshō`;
+        } else {
+            document.title = "Kenshō";
+        }
     }
 
     // --- 4. Generative SVG Pattern ---

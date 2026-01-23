@@ -108,7 +108,7 @@
 
 .time-option.selected, .sound-option.selected {
     background: var(--color-accent);
-    color: white;
+    color: var(--color-text-on-accent);
     border-color: var(--color-accent-dark);
 }
 
@@ -152,6 +152,7 @@ body.theme-sunrise {
     --color-text-secondary: #754f3f; /* Darkened for AA compliance */
     --color-accent: #f4a261;   /* Sandy Brown */
     --color-accent-dark: #e76f51;
+    --color-text-on-accent: #3d2b20; /* Dark Brown for Contrast */
 }
 
 /* Theme: Forest */
@@ -162,6 +163,7 @@ body.theme-forest {
     --color-text-secondary: #4b6456; /* Darkened for AA compliance */
     --color-accent: #a3b18a;   /* Olive Green */
     --color-accent-dark: #588157;
+    --color-text-on-accent: #1a2b1d; /* Dark Green for Contrast */
 }
 
 /* Theme: Twilight */
@@ -175,6 +177,7 @@ body.theme-twilight {
     --color-shadow-deep: rgba(0, 0, 0, 0.25);
     --color-accent: #e07a5f;   /* Terracotta */
     --color-accent-dark: #f2cc8f;
+    --color-text-on-accent: #1a222b; /* Dark Blue for Contrast */
 }
 
 /* Specific adjustments for Twilight theme */
@@ -196,7 +199,7 @@ body.theme-twilight .time-option:hover, body.theme-twilight .sound-option:hover 
 }
 body.theme-twilight .time-option.selected, body.theme-twilight .sound-option.selected {
     background: var(--color-accent);
-    color: #303d4e;
+    color: var(--color-text-on-accent);
     border-color: var(--color-accent-dark);
 }
 body.theme-twilight .theme-dot {
