@@ -23,6 +23,7 @@
     --color-text-secondary: #606075; /* Darkened for WCAG AA */
     --color-accent: #f2b7a8; /* Soft Terracotta */
     --color-accent-dark: #e89a87;
+    --color-text-on-accent: #2d2d3f; /* High contrast text for accent background */
 
     --font-main: 'Manrope', 'SF Pro Display', 'Helvetica Neue', 'Arial', sans-serif;
     --transition-speed: 0.8s;
@@ -233,7 +234,7 @@ main {
     font-weight: 800;
     text-transform: uppercase;
     background: var(--color-accent);
-    color: white;
+    color: var(--color-text-on-accent);
     border: none;
     padding: 1rem 2rem;
     border-radius: 50px;
