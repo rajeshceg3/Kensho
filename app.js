@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     Object.keys(audio).forEach(key => {
         const sound = audio[key];
         if (sound) {
-            sound.addEventListener('error', (e) => {
+            const handleError = (e) => {
                 console.error(`Audio error for ${key}:`, e);
                 const option = soundOptions.querySelector(`[data-sound="${key}"]`);
                 if (option) {
@@ -35,7 +35,32 @@ document.addEventListener('DOMContentLoaded', () => {
                          option.textContent += ' (Unavailable)';
                     }
                 }
-            });
+
+                // Resilience: If the currently selected sound fails, revert to 'none'
+                if (currentSound === key) {
+                    currentSound = 'none';
+                    const noneOption = soundOptions.querySelector('[data-sound="none"]');
+                    if (noneOption) {
+                        const previous = soundOptions.querySelector('.selected');
+                        if (previous) {
+                            previous.classList.remove('selected');
+                            previous.setAttribute('aria-checked', 'false');
+                            previous.tabIndex = -1;
+                        }
+                        noneOption.classList.add('selected');
+                        noneOption.setAttribute('aria-checked', 'true');
+                        noneOption.tabIndex = 0;
+                    }
+                    saveSettings();
+                }
+            };
+
+            sound.addEventListener('error', handleError);
+
+            // Check if already errored
+            if (sound.error) {
+                handleError(sound.error);
+            }
         }
     });
 
