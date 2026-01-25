@@ -104,6 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function openSettings() {
         settingsMenu.classList.add('active');
         settingsButton.setAttribute('aria-expanded', 'true');
+        settingsButton.setAttribute('aria-label', 'Close Settings');
         document.querySelector('main').setAttribute('inert', ''); // Trap focus strictly
         settingsMenu.focus(); // Move focus to the menu container
     }
@@ -113,6 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         settingsMenu.classList.remove('active');
         settingsButton.setAttribute('aria-expanded', 'false');
+        settingsButton.setAttribute('aria-label', 'Open Settings');
         document.querySelector('main').removeAttribute('inert');
         settingsButton.focus(); // Return focus to the toggle button
     }
@@ -368,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const sound = audio[currentSound];
                 if (sound) {
                     sound.currentTime = 0;
-                    fadeAudio(sound, 0, 0.5, 500, () => {
+                    fadeAudio(sound, sound.volume, 0.5, 500, () => {
                         setTimeout(() => {
                             if (sound && !sound.paused) {
                                 fadeAudio(sound, sound.volume, 0, 500);
@@ -394,10 +396,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Close settings if open
         if (settingsMenu.classList.contains('active')) {
-            settingsMenu.classList.remove('active');
-            settingsButton.setAttribute('aria-expanded', 'false');
+            closeSettings();
         }
 
+        poolContainer.classList.remove('timer-complete'); // Reset completion state
         poolContainer.classList.add('timer-active'); // Activate timer UI state
         settingsButton.classList.add('disabled');
         settingsButton.setAttribute('disabled', 'true');
@@ -598,14 +600,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const activeFades = new Map();
     let audioContext = null;
 
-    function playChime() {
+    async function playChime() {
         try {
             if (!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
             }
             // Resume context if suspended (browser policy)
             if (audioContext.state === 'suspended') {
-                audioContext.resume();
+                await audioContext.resume();
             }
 
             const oscillator = audioContext.createOscillator();
@@ -696,7 +698,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const sound = audio[currentSound];
             if (sound) {
                 sound.currentTime = 0;
-                fadeAudio(sound, 0, 1, 1000);
+                fadeAudio(sound, sound.volume, 1, 1000);
             }
         }
     }
