@@ -585,11 +585,20 @@ document.addEventListener('DOMContentLoaded', () => {
     function updatePattern(progress) {
         if (cachedPaths.length === 0) return;
 
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
         // Iterate over each path and update its stroke-dashoffset to reveal it
         cachedPaths.forEach(path => {
             const length = parseFloat(path.style.strokeDasharray);
-            // The offset decreases as progress increases, revealing the line
-            path.style.strokeDashoffset = length * (1 - progress);
+
+            if (prefersReducedMotion) {
+                 // If reduced motion is requested, show the completed pattern static
+                 // This reduces visual distraction/motion for sensitive users
+                 path.style.strokeDashoffset = 0;
+            } else {
+                // The offset decreases as progress increases, revealing the line
+                path.style.strokeDashoffset = length * (1 - progress);
+            }
         });
     }
 
@@ -598,6 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 5. Audio Controls ---
     const activeFades = new Map();
+    let sampleTimeout = null;
     let audioContext = null;
 
     async function playChime() {
