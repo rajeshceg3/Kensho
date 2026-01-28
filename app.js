@@ -137,7 +137,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const rawElements = settingsMenu.querySelectorAll(
             'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         );
-        const focusableElements = Array.from(rawElements).filter(el => el.tabIndex >= 0 && !el.disabled);
+
+        const menuElements = Array.from(rawElements).filter(el => el.tabIndex >= 0 && !el.disabled);
+
+        // Include settingsButton in the focus cycle so users can close the menu via keyboard
+        const focusableElements = [...menuElements];
+        if (!settingsButton.disabled) {
+            focusableElements.unshift(settingsButton);
+        }
 
         if (focusableElements.length === 0) return;
 
@@ -639,6 +646,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             oscillator.start(now);
             oscillator.stop(now + 3);
+
+            oscillator.onended = () => {
+                oscillator.disconnect();
+                gainNode.disconnect();
+            };
         } catch (e) {
             console.error("Error playing chime:", e);
         }
