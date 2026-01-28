@@ -19,6 +19,43 @@ document.addEventListener('DOMContentLoaded', () => {
         waves: document.getElementById('audio-waves'),
     };
 
+    // --- State Variables ---
+    // Moved up to ensure availability for error handlers
+    let currentSound = 'none';
+    let durationMinutes = 15; // Default duration
+    let totalSeconds = durationMinutes * 60;
+    let remainingSeconds = totalSeconds;
+    let timerInterval = null;
+    let timerCheckInterval = null;
+    let cachedPaths = [];
+
+    // --- Persistence Logic ---
+    function saveSettings() {
+        try {
+            const settings = {
+                theme: document.body.className || 'default',
+                time: durationMinutes,
+                sound: currentSound
+            };
+            localStorage.setItem('kensho-settings', JSON.stringify(settings));
+        } catch (e) {
+            console.error("Error saving settings:", e);
+        }
+    }
+
+    function loadSettings() {
+        try {
+            const saved = localStorage.getItem('kensho-settings');
+            if (saved) {
+                return JSON.parse(saved);
+            }
+        } catch (e) {
+            console.error("Error loading settings:", e);
+            return null;
+        }
+        return null;
+    }
+
     // Audio Error Handling
     Object.keys(audio).forEach(key => {
         const sound = audio[key];
@@ -63,41 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-
-    let currentSound = 'none';
-    let durationMinutes = 15; // Default duration
-    let totalSeconds = durationMinutes * 60;
-    let remainingSeconds = totalSeconds;
-    let timerInterval = null;
-    let timerCheckInterval = null;
-    let cachedPaths = [];
-
-    // --- Persistence Logic ---
-    function saveSettings() {
-        try {
-            const settings = {
-                theme: document.body.className || 'default',
-                time: durationMinutes,
-                sound: currentSound
-            };
-            localStorage.setItem('kensho-settings', JSON.stringify(settings));
-        } catch (e) {
-            console.error("Error saving settings:", e);
-        }
-    }
-
-    function loadSettings() {
-        try {
-            const saved = localStorage.getItem('kensho-settings');
-            if (saved) {
-                return JSON.parse(saved);
-            }
-        } catch (e) {
-            console.error("Error loading settings:", e);
-            return null;
-        }
-        return null;
-    }
 
     // --- 1. Settings Panel Logic ---
 
@@ -607,7 +609,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 5. Audio Controls ---
     const activeFades = new Map();
-    let sampleTimeout = null;
     let audioContext = null;
 
     async function playChime() {
