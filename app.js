@@ -516,9 +516,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePattern(1);
 
         // If focus is on the reset button (which is about to disappear), move it to start button
-        if (document.activeElement === resetButton) {
-            startButton.focus();
-        }
+        // We unconditionally move focus here to ensure keyboard/screen reader users are not lost
+        startButton.focus();
 
         poolContainer.classList.remove('timer-active');
         poolContainer.classList.add('timer-complete');
