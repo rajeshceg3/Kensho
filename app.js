@@ -412,6 +412,8 @@ document.addEventListener('DOMContentLoaded', () => {
         poolContainer.classList.add('timer-active'); // Activate timer UI state
         settingsButton.classList.add('disabled');
         settingsButton.setAttribute('disabled', 'true');
+        poolSurface.tabIndex = -1;
+        poolSurface.setAttribute('aria-disabled', 'true');
 
         resetButton.focus(); // Move focus to Reset button
 
@@ -426,6 +428,8 @@ document.addEventListener('DOMContentLoaded', () => {
         poolContainer.classList.remove('timer-active', 'timer-complete');
         settingsButton.classList.remove('disabled');
         settingsButton.removeAttribute('disabled');
+        poolSurface.tabIndex = 0;
+        poolSurface.removeAttribute('aria-disabled');
 
         if (timerInterval) {
             cancelAnimationFrame(timerInterval); // Stop any active timer
@@ -441,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTimerDisplay(); // Update display to initial time
         startButton.textContent = `Start Focus (${durationMinutes}m)`;
         startButton.setAttribute('aria-label', `Start Focus ${durationMinutes} minutes`);
-        patternContainer.innerHTML = ''; // Clear the SVG pattern
+        patternContainer.replaceChildren(); // Clear the SVG pattern
         cachedPaths = [];
         fadeOutAudio();
         startButton.focus(); // Return focus to start button
@@ -520,6 +524,8 @@ document.addEventListener('DOMContentLoaded', () => {
         poolContainer.classList.add('timer-complete');
         settingsButton.classList.remove('disabled');
         settingsButton.removeAttribute('disabled');
+        poolSurface.tabIndex = 0;
+        poolSurface.removeAttribute('aria-disabled');
         fadeOutAudio();
         playChime();
         announceStatus("Focus session complete.");
@@ -550,9 +556,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const angleStep = 360 / numLines; // Angle between each starting point
 
         // Clear previous content safely
-        while (patternContainer.firstChild) {
-            patternContainer.removeChild(patternContainer.firstChild);
-        }
+        patternContainer.replaceChildren();
 
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
@@ -581,7 +585,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // Calculate the length of the path for the drawing animation (stroke-dasharray/offset)
             const length = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
             path.style.strokeDasharray = length;
-            path.style.strokeDashoffset = length; // Start with the path fully hidden
+
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                path.style.strokeDashoffset = 0;
+            } else {
+                path.style.strokeDashoffset = length; // Start with the path fully hidden
+            }
 
             svg.appendChild(path);
         }
@@ -721,7 +730,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const sound = audio[currentSound];
             if (sound) {
                 sound.currentTime = 0;
-                fadeAudio(sound, sound.volume, 1, 1000);
+                // Ensure volume starts at 0 for smooth fade-in
+                sound.volume = 0;
+                fadeAudio(sound, 0, 1, 1000);
             }
         }
     }
