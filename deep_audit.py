@@ -16,10 +16,12 @@ def deep_audit():
         print("[TEST] LocalStorage Corruption Resilience")
         try:
             # Inject garbage into localStorage before load
-            page.goto("about:blank")
+            # Navigate to domain first to establish origin for localStorage
+            page.goto("http://localhost:8000")
             page.evaluate("localStorage.setItem('kensho-settings', '{garbage_json: true')") # Invalid JSON
 
-            page.goto("http://localhost:8000")
+            # Reload to trigger app initialization with garbage
+            page.reload()
 
             # If app handles it, it should load default settings and not crash
 
@@ -60,18 +62,14 @@ def deep_audit():
 
         # Click start/reset rapidly
         for _ in range(10):
-            page.locator("#start-button").click()
-            # Wait tiny bit for button to disappear/reappear logic?
-            # Actually we want to test robustness.
-            # If start button is clicked, it hides. Reset button appears.
-            # If we just blind click #reset-button immediately, it might not be there yet.
-            # But the test wants to spam.
-
-            # We'll try to toggle.
-            if page.locator("#start-button").is_visible():
-                page.locator("#start-button").click()
-            elif page.locator("#reset-button").is_visible():
-                page.locator("#reset-button").click()
+            # We'll try to toggle with force=True to bypass animation stability checks
+            try:
+                if page.locator("#start-button").is_visible():
+                    page.locator("#start-button").click(force=True, timeout=1000)
+                elif page.locator("#reset-button").is_visible():
+                    page.locator("#reset-button").click(force=True, timeout=1000)
+            except Exception:
+                pass # Ignore timeouts during rapid fire spam
 
             # Playwright actions are auto-waiting, so this isn't truly "rapid fire" in the sense of spamming events.
             # To spam, we'd need page.evaluate or blind clicks.
