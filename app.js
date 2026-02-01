@@ -403,6 +403,17 @@ document.addEventListener('DOMContentLoaded', () => {
             audioContext.resume();
         }
 
+        // WARM UP: Play a silent buffer to fully unlock audio on mobile/strict browsers
+        try {
+            const buffer = audioContext.createBuffer(1, 1, 22050);
+            const source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContext.destination);
+            source.start(0);
+        } catch (e) {
+            console.warn("Audio warm-up failed:", e);
+        }
+
         // Close settings if open
         if (settingsMenu.classList.contains('active')) {
             closeSettings();
@@ -697,16 +708,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        const startTime = Date.now();
+        const startVolume = from;
         let interval = 50; // ms
-        let steps = duration / interval;
-        let step_u = (to - from) / steps;
 
         let volInterval = setInterval(() => {
-            let newVol = sound.volume + step_u;
-            // Clamp volume between 0 and 1
-            newVol = Math.max(0, Math.min(1, newVol));
+            const now = Date.now();
+            const elapsed = now - startTime;
+            const progress = Math.min(1, elapsed / duration);
 
-            if ((step_u > 0 && newVol >= to) || (step_u < 0 && newVol <= to)) {
+            const newVol = startVolume + (to - startVolume) * progress;
+            const clampedVol = Math.max(0, Math.min(1, newVol));
+
+            sound.volume = clampedVol;
+
+            if (progress >= 1) {
                 sound.volume = to;
                 if (to === 0) {
                     sound.pause();
@@ -715,8 +731,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (onComplete) onComplete();
                 clearInterval(volInterval);
                 activeFades.delete(sound);
-            } else {
-                sound.volume = newVol;
             }
         }, interval);
 
@@ -795,6 +809,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTimerDisplay();
         startButton.textContent = `Start Focus (${durationMinutes}m)`;
         startButton.setAttribute('aria-label', `Start Focus ${durationMinutes} minutes`);
+
+        // Initialize Pattern (to avoid empty state)
+        generatePattern(totalSeconds);
 
         // 3. Restore Sound
         let soundToSet = 'none';
