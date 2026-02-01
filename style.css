@@ -175,6 +175,7 @@ main {
         0 20px 40px var(--color-shadow-deep);
     transition: transform var(--transition-speed) cubic-bezier(0.165, 0.84, 0.44, 1),
                 box-shadow var(--transition-speed) cubic-bezier(0.165, 0.84, 0.44, 1);
+    will-change: transform, box-shadow;
 }
 
 #pool-surface:focus-visible {

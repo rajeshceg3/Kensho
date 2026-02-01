@@ -57,6 +57,8 @@
     visibility: hidden;
     transition: opacity 0.4s ease, transform 0.4s ease, visibility 0s linear 0.4s;
     width: 280px;
+    max-height: 80vh;
+    overflow-y: auto;
 }
 
 .settings-menu.active {
