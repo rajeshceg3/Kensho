@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const srStatus = document.getElementById('sr-status');
     const settingsButton = document.getElementById('settings-button');
     const settingsMenu = document.getElementById('settings-menu');
+    const closeSettingsButton = document.getElementById('close-settings-button');
     const timeOptions = document.getElementById('time-options');
     const themeOptions = document.getElementById('theme-options');
     const soundOptions = document.getElementById('sound-options');
@@ -27,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let remainingSeconds = totalSeconds;
     let timerInterval = null;
     let timerCheckInterval = null;
+    let keepAliveInterval = null;
     let cachedPaths = [];
 
     // --- Persistence Logic ---
@@ -140,11 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const menuElements = Array.from(rawElements).filter(el => el.tabIndex >= 0 && !el.disabled);
 
-        // Include settingsButton in the focus cycle so users can close the menu via keyboard
+        // Focus cycle stays strictly within the menu (including the internal close button)
         const focusableElements = [...menuElements];
-        if (!settingsButton.disabled) {
-            focusableElements.unshift(settingsButton);
-        }
 
         if (focusableElements.length === 0) return;
 
@@ -181,6 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
         e.stopPropagation();
         toggleSettings();
     });
+
+    closeSettingsButton.addEventListener('click', closeSettings);
 
     document.addEventListener('click', (e) => {
         if (!settingsMenu.contains(e.target) && settingsButton !== e.target && !settingsButton.contains(e.target) && settingsMenu.classList.contains('active')) {
@@ -431,6 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
         announceStatus(`Focus timer started. ${durationMinutes} minutes remaining.`);
         startTimer();
         fadeInAudio();
+        keepAudioAlive();
     });
 
     // Event listener for the Reset button
@@ -451,6 +453,8 @@ document.addEventListener('DOMContentLoaded', () => {
             clearInterval(timerCheckInterval);
             timerCheckInterval = null;
         }
+
+        stopKeepAlive();
 
         remainingSeconds = totalSeconds; // Reset time
         updateTimerDisplay(); // Update display to initial time
@@ -520,6 +524,8 @@ document.addEventListener('DOMContentLoaded', () => {
             clearInterval(timerCheckInterval);
             timerCheckInterval = null;
         }
+
+        stopKeepAlive();
 
         remainingSeconds = 0;
         timerDisplay.textContent = "Done"; // Show completion message
@@ -636,6 +642,38 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 5. Audio Controls ---
     const activeFades = new Map();
     let audioContext = null;
+
+    function keepAudioAlive() {
+        if (!audioContext) return;
+
+        // Clear any existing interval to prevent duplicates
+        if (keepAliveInterval) clearInterval(keepAliveInterval);
+
+        // Schedule a tiny silent buffer every 20 seconds to prevent the browser
+        // from suspending the AudioContext due to inactivity (silence).
+        keepAliveInterval = setInterval(() => {
+            if (audioContext.state === 'suspended') {
+                audioContext.resume().catch(() => {});
+            }
+
+            try {
+                const buffer = audioContext.createBuffer(1, 1, 22050);
+                const source = audioContext.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioContext.destination);
+                source.start(0);
+            } catch (e) {
+                // Ignore errors
+            }
+        }, 20000);
+    }
+
+    function stopKeepAlive() {
+        if (keepAliveInterval) {
+            clearInterval(keepAliveInterval);
+            keepAliveInterval = null;
+        }
+    }
 
     async function playChime() {
         try {
