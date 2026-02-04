@@ -49,7 +49,15 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const saved = localStorage.getItem('kensho-settings');
             if (saved) {
-                return JSON.parse(saved);
+                const parsed = JSON.parse(saved);
+                // Input Sanitization
+                if (parsed.time) {
+                    const time = parseFloat(parsed.time);
+                    if (isNaN(time) || time <= 0 || !isFinite(time)) {
+                        parsed.time = 15; // Reset to default
+                    }
+                }
+                return parsed;
             }
         } catch (e) {
             console.error("Error loading settings:", e);
@@ -397,11 +405,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (timerInterval) return; // Prevent multiple timers
 
         // Initialize/Resume Audio Context on user interaction
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioContext.state === 'suspended') {
-            audioContext.resume();
+        try {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        } catch (e) {
+            console.error("Audio Context initialization failed:", e);
         }
 
         // WARM UP: Play a silent buffer to fully unlock audio on mobile/strict browsers
@@ -859,7 +871,20 @@ document.addEventListener('DOMContentLoaded', () => {
         currentSound = soundToSet;
 
         // Update Sound UI
-        const soundOption = soundOptions.querySelector(`[data-sound="${soundToSet}"]`) || soundOptions.querySelector('[data-sound="none"]');
+        let soundOption = soundOptions.querySelector(`[data-sound="${soundToSet}"]`);
+
+        // Check if selected sound is unavailable/disabled
+        if (soundOption && (soundOption.classList.contains('disabled') || soundOption.disabled)) {
+             soundToSet = 'none';
+             soundOption = soundOptions.querySelector('[data-sound="none"]');
+             currentSound = 'none';
+        }
+
+        // Fallback if not found
+        if (!soundOption) {
+            soundOption = soundOptions.querySelector('[data-sound="none"]');
+        }
+
         if (soundOption) {
             const currentSelected = soundOptions.querySelector('.selected');
             if (currentSelected) {
